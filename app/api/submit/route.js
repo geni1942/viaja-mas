@@ -2,145 +2,192 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const data = await request.json();
+    const formData = await request.json();
     
-    // Email donde recibes las solicitudes
-    const OWNER_EMAIL = 'mraggio@fen.uchile.cl';
-    
-    // Formatear los intereses
-    const interesesMap = {
-      'playa': '🏖️ Playa',
-      'cultura': '🏛️ Cultura',
-      'aventura': '🏔️ Aventura',
-      'gastronomia': '🍽️ Gastronomía',
-      'relax': '🧘 Relax',
-      'naturaleza': '🌲 Naturaleza',
-      'nocturna': '🎉 Vida Nocturna',
-      'deporte': '⚽ Deporte',
-      'shopping': '🛍️ Shopping',
-    };
-    
-    const interesesTexto = data.intereses
-      .map(i => interesesMap[i] || i)
-      .join(', ');
-    
-    // Formatear ritmo
-    const ritmoTexto = data.ritmo <= 2 ? 'Relajado' : data.ritmo <= 3 ? 'Moderado' : 'Intenso';
-    
-    // Formatear tipo de viaje
-    const tipoViajeMap = {
-      'solo': 'Solo/a',
-      'pareja': 'Pareja',
-      'familia': 'Familia',
-      'amigos': 'Amigos/as'
-    };
-    
-    // Email HTML para ti (el dueño) con todos los detalles
-    const ownerEmailHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #f97316, #ec4899); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Nueva Solicitud de Itinerario</h1>
-        </div>
-        
-        <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          
-          <!-- Datos del cliente -->
-          <div style="background: #fef3c7; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-            <h2 style="margin: 0 0 15px 0; color: #92400e; font-size: 18px;">👤 Datos del Cliente</h2>
-            <p style="margin: 5px 0; color: #333;"><strong>Nombre:</strong> ${data.nombre}</p>
-            <p style="margin: 5px 0; color: #333;"><strong>Email:</strong> <a href="mailto:${data.email}" style="color: #f97316;">${data.email}</a></p>
-          </div>
-          
-          <!-- Detalles del viaje -->
-          <div style="background: #f0fdf4; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-            <h2 style="margin: 0 0 15px 0; color: #166534; font-size: 18px;">✈️ Detalles del Viaje</h2>
-            <p style="margin: 5px 0; color: #333;"><strong>Destino:</strong> ${data.tieneDestino ? data.destino : '🎲 Quiere recomendaciones (Sorpréndeme)'}</p>
-            <p style="margin: 5px 0; color: #333;"><strong>Origen:</strong> ${data.origen}</p>
-            <p style="margin: 5px 0; color: #333;"><strong>Presupuesto:</strong> $${data.presupuesto.toLocaleString()} USD por persona</p>
-            <p style="margin: 5px 0; color: #333;"><strong>Duración:</strong> ${data.dias} días</p>
-          </div>
-          
-          <!-- Viajeros -->
-          <div style="background: #fdf4ff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-            <h2 style="margin: 0 0 15px 0; color: #86198f; font-size: 18px;">👥 Viajeros</h2>
-            <p style="margin: 5px 0; color: #333;"><strong>Tipo:</strong> ${tipoViajeMap[data.tipoViaje] || data.tipoViaje}</p>
-            <p style="margin: 5px 0; color: #333;"><strong>Número de viajeros:</strong> ${data.numViajeros}</p>
-          </div>
-          
-          <!-- Preferencias -->
-          <div style="background: #eff6ff; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-            <h2 style="margin: 0 0 15px 0; color: #1e40af; font-size: 18px;">✨ Preferencias</h2>
-            <p style="margin: 5px 0; color: #333;"><strong>Intereses:</strong> ${interesesTexto}</p>
-            <p style="margin: 5px 0; color: #333;"><strong>Ritmo:</strong> ${ritmoTexto} (${data.ritmo}/5)</p>
-          </div>
-          
-          <!-- Próximos pasos -->
-          <div style="background: #fff7ed; padding: 20px; border-radius: 12px; border-left: 4px solid #f97316;">
-            <h2 style="margin: 0 0 15px 0; color: #c2410c; font-size: 18px;">📋 Próximos Pasos</h2>
-            <ol style="margin: 0; padding-left: 20px; color: #333;">
-              <li style="margin-bottom: 8px;">Crear itinerario personalizado con IA</li>
-              <li style="margin-bottom: 8px;">Enviar preview + datos de pago al cliente</li>
-              <li style="margin-bottom: 8px;">Esperar confirmación de pago</li>
-              <li style="margin-bottom: 0;">Enviar itinerario completo</li>
-            </ol>
-          </div>
-          
-          <!-- Botón de responder -->
-          <div style="text-align: center; margin-top: 25px;">
-            <a href="mailto:${data.email}?subject=Tu%20itinerario%20de%20Viaja%20M%C3%A1s%20est%C3%A1%20listo" 
-               style="display: inline-block; background: linear-gradient(135deg, #f97316, #ec4899); color: white; padding: 15px 30px; border-radius: 12px; text-decoration: none; font-weight: bold;">
-              Responder al Cliente
-            </a>
-          </div>
-          
-        </div>
-        
-        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">
-          Viaja Más · Nueva solicitud recibida
-        </p>
-      </div>
-    </body>
-    </html>
-    `;
+    console.log('📝 Nueva solicitud:', formData.nombre, formData.email);
 
-    // Enviar email usando Resend
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Viaja Más <onboarding@resend.dev>',
-        to: OWNER_EMAIL,
-        subject: `🎉 Nueva solicitud: ${data.nombre} - ${data.tieneDestino ? data.destino : 'Quiere recomendaciones'}`,
-        html: ownerEmailHtml,
-      }),
-    });
-
-    if (!resendResponse.ok) {
-      const errorData = await resendResponse.json();
-      console.error('Error de Resend:', errorData);
-      throw new Error('Error al enviar notificación');
+    if (!formData.email || !formData.nombre) {
+      return NextResponse.json(
+        { error: 'Email y nombre son requeridos' },
+        { status: 400 }
+      );
     }
 
-    // Respuesta exitosa
-    return NextResponse.json({
-      success: true,
-      message: 'Solicitud recibida correctamente'
-    });
+    const resendKey = process.env.RESEND_API_KEY;
+
+    if (!resendKey || resendKey.length < 10) {
+      console.error('❌ RESEND_API_KEY no configurada');
+      return NextResponse.json(
+        { error: 'Error de configuración. Contacta al administrador.' },
+        { status: 500 }
+      );
+    }
+
+    const interesesTexto = formData.intereses?.join(', ') || 'No especificado';
+    const ritmoTexto = formData.ritmo <= 2 ? 'Relajado' : formData.ritmo <= 3 ? 'Moderado' : 'Intenso';
+    const tipoViajeTexto = {
+      'solo': 'Viajero solo',
+      'pareja': 'Pareja',
+      'familia': 'Familia',
+      'amigos': 'Grupo de amigos/as'
+    }[formData.tipoViaje] || 'No especificado';
+    
+    const alojamientoTexto = {
+      'hotel': 'Hotel',
+      'airbnb': 'Airbnb',
+      'hostal': 'Hostal',
+      'bnb': 'B&B'
+    }[formData.alojamiento] || 'No especificado';
+
+    const planTexto = formData.plan || 'No seleccionado';
+    const planPrecio = formData.planPrecio ? `$${formData.planPrecio.toLocaleString('es-CL')} CLP` : 'No definido';
+
+    console.log('📧 Enviando notificación...');
+
+    // Email de notificación a la dueña
+    const notificationEmail = process.env.NOTIFICATION_EMAIL;
+    if (notificationEmail) {
+      const notificationHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #f97316, #ec4899); padding: 30px; text-align: center; color: white; border-radius: 16px 16px 0 0; }
+    .content { background: #f8fafc; padding: 25px; border: 1px solid #e2e8f0; border-top: none; }
+    .info-box { background: white; padding: 20px; border-radius: 12px; margin: 15px 0; border: 1px solid #e2e8f0; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: #64748b; font-weight: 500; }
+    .value { color: #1e293b; font-weight: 600; }
+    .footer { text-align: center; padding: 20px; color: #64748b; font-size: 13px; background: #f1f5f9; border-radius: 0 0 16px 16px; }
+    .highlight { background: linear-gradient(135deg, #fef3c7, #fce7f3); padding: 15px; border-radius: 10px; margin-top: 15px; }
+    .plan-box { background: linear-gradient(135deg, #f97316, #ec4899); color: white; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; }
+    .plan-box .precio { font-size: 24px; font-weight: bold; }
+    .next-steps { background: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 10px; margin-top: 15px; }
+    .next-steps h4 { color: #065f46; margin: 0 0 10px 0; }
+    .next-steps ol { margin: 0; padding-left: 20px; color: #047857; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin:0;">🎉 ¡Nueva Solicitud!</h1>
+    <p style="margin:10px 0 0 0; opacity: 0.9;">Tienes un nuevo cliente esperando</p>
+  </div>
+  <div class="content">
+    <div class="plan-box">
+      <p style="margin: 0 0 5px 0; opacity: 0.9;">Plan seleccionado</p>
+      <p class="precio" style="margin: 0;">${planTexto}</p>
+      <p style="margin: 5px 0 0 0; font-size: 18px;">${planPrecio}</p>
+    </div>
+
+    <div class="info-box">
+      <h3 style="margin: 0 0 15px 0; color: #f97316;">👤 Datos del Cliente</h3>
+      <div class="info-row">
+        <span class="label">Nombre:</span>
+        <span class="value">${formData.nombre}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Email:</span>
+        <span class="value">${formData.email}</span>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h3 style="margin: 0 0 15px 0; color: #f97316;">✈️ Detalles del Viaje</h3>
+      <div class="info-row">
+        <span class="label">Destino:</span>
+        <span class="value">${formData.destino || 'Pidió recomendaciones'}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Origen:</span>
+        <span class="value">${formData.origen}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Días:</span>
+        <span class="value">${formData.dias} días</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Presupuesto:</span>
+        <span class="value">$${formData.presupuesto?.toLocaleString()} USD por persona</span>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h3 style="margin: 0 0 15px 0; color: #f97316;">👥 Viajeros</h3>
+      <div class="info-row">
+        <span class="label">Tipo de viaje:</span>
+        <span class="value">${tipoViajeTexto}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Número de viajeros:</span>
+        <span class="value">${formData.numViajeros || 1}</span>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h3 style="margin: 0 0 15px 0; color: #f97316;">🎯 Preferencias</h3>
+      <div class="info-row">
+        <span class="label">Intereses:</span>
+        <span class="value">${interesesTexto}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Ritmo:</span>
+        <span class="value">${ritmoTexto}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Alojamiento:</span>
+        <span class="value">${alojamientoTexto}</span>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <strong>💳 Estado del pago:</strong> Pendiente de verificación
+      <br><small>El cliente recibió los datos de transferencia. Espera su comprobante en geniraggio@hotmail.com</small>
+    </div>
+
+    <div class="next-steps">
+      <h4>📋 Próximos pasos:</h4>
+      <ol>
+        <li>Espera el comprobante de pago del cliente</li>
+        <li>Verifica la transferencia de ${planPrecio}</li>
+        <li>Genera el itinerario con el prompt de Notion</li>
+        <li>Crea el PDF y envíalo al cliente</li>
+      </ol>
+    </div>
+  </div>
+  <div class="footer">
+    <p>Viaja Más - Tu herramienta de itinerarios</p>
+  </div>
+</body>
+</html>`;
+
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendKey}`,
+          },
+          body: JSON.stringify({
+            from: 'Viaja Más <onboarding@resend.dev>',
+            to: notificationEmail,
+            subject: `🎉 Nueva solicitud: ${formData.nombre} - ${planTexto} (${planPrecio})`,
+            html: notificationHtml,
+          }),
+        });
+        console.log('✅ Notificación enviada a:', notificationEmail);
+      } catch (e) {
+        console.log('⚠️ No se pudo enviar notificación:', e.message);
+      }
+    }
+
+    return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Error al procesar la solicitud' },
+      { error: 'Error al procesar tu solicitud. Intenta de nuevo.' },
       { status: 500 }
     );
   }
