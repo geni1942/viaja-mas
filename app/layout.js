@@ -1,20 +1,35 @@
-import './globals.css';
+import { Inter } from "next/font/google";
+import Script from "next/script";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: 'Viaja Más | Planifica menos, vive más',
-  description: 'Cuéntanos tu presupuesto, tus días y lo que te apasiona. Creamos tu viaje perfecto: vuelos, hotel, actividades y más — todo listo para reservar.',
-  keywords: 'viajes, itinerarios, planificación de viajes, vacaciones, turismo',
+  title: "Viaja Más - Itinerarios de Viaje Personalizados",
+  description: "Viaja más. Planifica menos. Recibe itinerarios personalizados con IA para tu próximo viaje.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>" />
+        {/* Travelpayouts Verification Script */}
+        <Script
+          id="travelpayouts-verification"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                var script = document.createElement("script");
+                script.async = 1;
+                script.src = 'https://tpembars.com/NTA2OTM0.js?t=506934';
+                document.head.appendChild(script);
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="antialiased">
-        {children}
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
