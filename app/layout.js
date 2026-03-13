@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Vivante - Itinerarios de Viaje Personalizados",
-  description: "Vivante. Planifica menos. Recibe itinerarios personalizados con IA para tu próximo viaje.",
+  description: "Viaja más. Planifica menos. Recibe itinerarios personalizados con IA para tu próximo viaje.",
 };
 
 export default function RootLayout({ children }) {
