@@ -52,7 +52,7 @@ export default function Home() {
             <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl sm:text-2xl font-bold text-white">Viaja Más</span>
+            <span className="text-xl sm:text-2xl font-bold text-white">Vivante</span>
           </div>
           <button
             onClick={() => setShowForm(true)}
@@ -66,7 +66,7 @@ export default function Home() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex flex-col justify-center h-[calc(100vh-100px)]">
           <div className="max-w-3xl">
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              Viaja más.<br />
+              Vivante.<br />
               <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                 Planifica menos.
               </span>
