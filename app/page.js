@@ -378,7 +378,7 @@ export default function Home() {
                 <Plane className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold text-white">Viaja Más</span>
+                <span className="text-xl font-bold text-white">Vivante</span>
                 <p className="text-sm text-gray-500">Planifica menos, vive más</p>
               </div>
             </div>
@@ -389,7 +389,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-sm">
-            © {new Date().getFullYear()} Viaja Más. Hecho con ❤️ para viajeros como tú.
+            © {new Date().getFullYear()} Vivante. Hecho con ❤️ para viajeros como tú.
           </div>
         </div>
       </footer>
