@@ -16,6 +16,9 @@ const inter = Inter({
 })
 
 export const metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://vivante.vercel.app'
+  ),
   title: 'VIVANTE — Viaja más. Planifica menos.',
   description:
     'Diseñamos tu itinerario perfecto en minutos. Solo dinos tu presupuesto, días y lo que te apasiona.',
@@ -39,7 +42,6 @@ export default function RootLayout({ children }) {
           fontFamily: 'var(--font-inter), sans-serif',
         }}
       >
-        {/* Header eliminado — el navbar vive dentro de cada página */}
         <main>{children}</main>
       </body>
     </html>
