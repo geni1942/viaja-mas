@@ -1,9 +1,10 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-// Imágenes locales disponibles para destinos conocidos
 const DESTINATION_IMAGES = {
   bali: '/images/Bali, Indonesia.jpg',
   santorini: '/images/Santorini, Grecia.jpg',
@@ -28,7 +29,7 @@ function LoadingSpinner() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center px-4">
-        <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+        <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
         <h2 className="text-xl font-semibold text-gray-700">Generando tu itinerario personalizado...</h2>
         <p className="text-gray-500 mt-2">Esto puede tomar unos segundos ✨</p>
       </div>
@@ -104,12 +105,10 @@ function PagoExitosoContent() {
         @media print {
           .no-print { display: none !important; }
           body { font-size: 12px; background: white; }
-          .page-break { page-break-before: always; }
         }
       `}</style>
 
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-pink-500 py-12 text-white text-center no-print">
           <div className="text-5xl mb-4">🎉</div>
           <h1 className="text-3xl font-bold mb-2">¡Tu itinerario está listo, {formData?.nombre}!</h1>
@@ -119,7 +118,6 @@ function PagoExitosoContent() {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-8">
-          {/* Action buttons */}
           <div className="flex gap-3 mb-8 no-print">
             <button
               onClick={() => window.print()}
@@ -135,7 +133,6 @@ function PagoExitosoContent() {
             </button>
           </div>
 
-          {/* Resumen del viaje */}
           <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
             <h2 className="text-2xl font-bold text-gray-800 mb-1">{itinerario?.titulo}</h2>
             <p className="text-gray-500 mb-5">{itinerario?.resumen}</p>
@@ -157,23 +154,16 @@ function PagoExitosoContent() {
             </div>
           </div>
 
-          {/* Itinerario día a día */}
           <h3 className="text-lg font-bold text-gray-800 mb-4 px-1">📅 Tu itinerario día a día</h3>
 
           {itinerario?.dias?.map((dia, i) => (
             <div key={i} className="bg-white rounded-2xl mb-5 shadow-sm overflow-hidden">
-              {/* Foto del día */}
               <div className="relative h-48 bg-gradient-to-r from-orange-400 to-pink-400">
                 <img
-                  src={
-                    destinoImagen ||
-                    `https://picsum.photos/seed/${encodeURIComponent(formData?.destino || 'travel')}-day${i}/800/400`
-                  }
+                  src={destinoImagen || `https://picsum.photos/seed/${encodeURIComponent((formData?.destino || 'travel') + i)}/800/400`}
                   alt={dia.titulo}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent" />
                 <div className="absolute bottom-4 left-5">
@@ -181,11 +171,8 @@ function PagoExitosoContent() {
                   <h3 className="text-white text-xl font-bold leading-tight">{dia.titulo}</h3>
                 </div>
               </div>
-
-              {/* Contenido */}
               <div className="p-5">
                 <p className="text-gray-600 leading-relaxed mb-4">{dia.descripcion}</p>
-
                 {dia.actividades?.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-semibold text-gray-700 mb-2">📍 Actividades del día</h4>
@@ -199,7 +186,6 @@ function PagoExitosoContent() {
                     </div>
                   </div>
                 )}
-
                 <div className="flex flex-wrap gap-2 mt-3">
                   {dia.restaurante && (
                     <span className="text-xs bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full">
@@ -216,7 +202,6 @@ function PagoExitosoContent() {
             </div>
           ))}
 
-          {/* Tips */}
           {itinerario?.tips?.length > 0 && (
             <div className="bg-white rounded-2xl p-6 mb-5 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-4">💡 Tips importantes</h3>
@@ -231,7 +216,6 @@ function PagoExitosoContent() {
             </div>
           )}
 
-          {/* Presupuesto estimado */}
           {itinerario?.presupuesto_desglose && (
             <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-4">💰 Estimado de presupuesto</h3>
@@ -246,10 +230,9 @@ function PagoExitosoContent() {
             </div>
           )}
 
-          {/* Footer */}
           <div className="text-center py-6 text-gray-400 text-sm no-print">
             <p>
-              ¿Dudas o consultas? Escríbenos a{' '}
+              ¿Dudas? Escríbenos a{' '}
               <a href="mailto:vive.vivante.ch@gmail.com" className="text-orange-500 hover:underline">
                 vive.vivante.ch@gmail.com
               </a>
