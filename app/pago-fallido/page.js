@@ -1,6 +1,7 @@
 'use client';
 
-import { useSearchParams, Suspense } from 'next/navigation';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 function PagoFallidoContent() {
   const searchParams = useSearchParams();
@@ -37,7 +38,13 @@ function PagoFallidoContent() {
 
 export default function PagoFallido() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <PagoFallidoContent />
     </Suspense>
   );
