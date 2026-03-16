@@ -11,10 +11,10 @@ export default function Home() {
   const [showContact, setShowContact] = useState(false);
 
   const destinosHero = [
-    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/inspiracion/torres-del-paine.jpg' },
-    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/inspiracion/santorini.jpg' },
-    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/inspiracion/bali.jpg' },
-    { nombre: 'Tokio', pais: 'Japón', imagen: '/images/inspiracion/tokio.jpg' },
+    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres del paine, Chile.jpg' },
+    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini, Grecia.jpg' },
+    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali, Indonesia.jpg' },
+    { nombre: 'Tokio', pais: 'Japón', imagen: '/images/Tokio, Japón.jpg' },
   ];
 
   useEffect(() => {
@@ -25,12 +25,12 @@ export default function Home() {
   }, []);
 
   const destinos = [
-    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/inspiracion/torres-del-paine.jpg', precio: 'Desde $400.000 CLP', tag: '🇨🇱 Local' },
-    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/inspiracion/santorini.jpg', precio: 'Desde $1.200 USD', tag: '🔥 Popular' },
-    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/inspiracion/bali.jpg', precio: 'Desde $1.500 USD', tag: '✨ Trending' },
-    { nombre: 'Machu Picchu', pais: 'Perú', imagen: '/images/inspiracion/machu-picchu.jpg', precio: 'Desde $600 USD', tag: '🎒 Aventura' },
-    { nombre: 'Cartagena', pais: 'Colombia', imagen: '/images/inspiracion/cartagena.jpg', precio: 'Desde $500 USD', tag: '🏖️ Playa' },
-    { nombre: 'Barcelona', pais: 'España', imagen: '/images/inspiracion/barcelona.jpg', precio: 'Desde $1.100 USD', tag: '🎨 Cultura' },
+    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres del paine, Chile.jpg', precio: 'Desde $400.000 CLP', tag: '🇨🇱 Local' },
+    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini, Grecia.jpg', precio: 'Desde $1.200 USD', tag: '🔥 Popular' },
+    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali, Indonesia.jpg', precio: 'Desde $1.500 USD', tag: '✨ Trending' },
+    { nombre: 'Machu Picchu', pais: 'Perú', imagen: '/images/Machu Picchu, Peru.jpg', precio: 'Desde $600 USD', tag: '🎒 Aventura' },
+    { nombre: 'Cartagena', pais: 'Colombia', imagen: '/images/cartagena.jpg', precio: 'Desde $500 USD', tag: '🏖️ Playa' },
+    { nombre: 'Barcelona', pais: 'España', imagen: '/images/Barcelona, España.jpg', precio: 'Desde $1.100 USD', tag: '🎨 Cultura' },
   ];
 
   return (
@@ -442,9 +442,9 @@ export default function Home() {
                 <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
               </svg>
             </a>
-            {/* TikTok — URL pendiente, por ahora solo ícono */}
+            {/* TikTok */}
             <a
-              href="#"
+              href="https://www.tiktok.com/@vive.vivante"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-white transition-colors"
