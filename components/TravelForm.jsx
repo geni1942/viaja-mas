@@ -58,6 +58,7 @@ export default function TravelForm({ onClose }) {
         'Restaurantes recomendados por zona y RRSS',
         'Opciones de tours y actividades',
         'Tips de seguridad y transporte',
+        'Tips culturales, de conectividad y dinero',
         'Presupuesto detallado por día'
       ],
       popular: true
@@ -305,6 +306,7 @@ export default function TravelForm({ onClose }) {
                     const data = await res.json();
                     if (data.init_point) {
                       localStorage.setItem('vivante_formData', JSON.stringify(formData));
+                      localStorage.setItem('vivante_planId', selectedPlan);
                       window.location.href = data.init_point;
                     } else {
                       throw new Error(data.error || 'No se pudo iniciar el pago');
