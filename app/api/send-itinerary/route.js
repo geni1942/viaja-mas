@@ -590,6 +590,29 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
       if (!emailRes.ok) console.error('Resend error:', await emailRes.text());
     }
 
+    // Brevo: agregar contacto a lista 'clientes_vivante' para automatizacion testimonial 48h
+    const brevoKey = process.env.BREVO_API_KEY;
+    if (brevoKey) {
+      try {
+        await fetch('https://api.brevo.com/v3/contacts', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'api-key': brevoKey,
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            attributes: { FIRSTNAME: (formData.nombre || '').split(' ')[0] },
+            listIds: [4],
+            updateEnabled: true,
+          }),
+        });
+      } catch (e) {
+        console.error('Brevo error:', e.message);
+      }
+    }
+
     return NextResponse.json({ itinerario, planId });
   } catch (error) {
     console.error('send-itinerary error:', error);
