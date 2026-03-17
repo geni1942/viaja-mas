@@ -541,6 +541,11 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
 
   </div>
 
+  ${!isPro ? `<div style="background:linear-gradient(135deg,#FF6332 0%,#C2185B 100%);border-radius:12px;padding:24px 20px;margin:0 0 24px;text-align:center;">
+    <p style="color:#fff;font-size:16px;font-weight:800;margin:0 0 8px;">&#x1F680; &iquest;Quer&eacute;s m&aacute;s detalle de tu viaje?</p>
+    <p style="color:rgba(255,255,255,0.9);font-size:13px;line-height:1.6;margin:0 0 16px;">Mejor&aacute; a Vivante Pro por solo <strong>$9 m&aacute;s</strong> y agreg&aacute; restaurantes recomendados, vida nocturna, tips de seguridad, eSIM, frases locales y presupuesto detallado d&iacute;a a d&iacute;a.</p>
+    <a href="mailto:vive.vivante.ch@gmail.com?subject=Quiero%20mejorar%20a%20Vivante%20Pro" style="display:inline-block;background:#fff;color:#FF6332;padding:10px 28px;border-radius:24px;font-weight:800;font-size:13px;text-decoration:none;">Mejorar a Pro por $9 &rarr;</a>
+  </div>` : ''}
   <div style="background:#FF6332;padding:32px;text-align:center;">
     <p style="color:#fff;font-size:22px;font-weight:800;margin:0 0 8px;">VIVANTE</p>
     <p style="color:rgba(255,255,255,0.9);font-size:14px;margin:0 0 16px;">
