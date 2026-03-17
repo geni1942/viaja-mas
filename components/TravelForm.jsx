@@ -50,8 +50,8 @@ export default function TravelForm({ onClose }) {
     {
       id: 'pro',
       nombre: 'Vivante Pro',
-      precio: 25,        // USD (mostrado al usuario)
-      precioClp: 24990,  // CLP (usado en MercadoPago Chile)
+      precio: 28,        // USD (mostrado al usuario)
+      precioClp: 27990,  // CLP (usado en MercadoPago Chile)
       descripcion: 'Experiencia premium con todos los detalles',
       incluye: [
         'Todo lo del Vivante Básico',
