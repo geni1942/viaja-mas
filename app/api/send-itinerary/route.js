@@ -108,7 +108,6 @@ IMPORTANTE: Reemplaza NOMBRE_REAL_CIUDAD_1 y NOMBRE_REAL_CIUDAD_2 con los nombre
 "experiencias": [
   {
     "nombre": "string (nombre de la actividad/tour)",
-    "foto_busqueda": "string (3-4 palabras en INGLÉS para búsqueda de imagen, ej: teamlab tokyo digital art)",
     "por_que_vale": "string en voz VIVANTE",
     "duracion": "string (ej: 3 horas)",
     "precio": "string (ej: $25-40 USD por persona)",
@@ -168,7 +167,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
     {
       "numero": número,
       "titulo": "string creativo",
-      "foto_busqueda": "string (3-4 palabras en INGLÉS, ej: kyoto bamboo grove japan)",
       "manana": {
         "horario": "string",
         "actividad": "string detallado",
@@ -219,7 +217,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "lo_imperdible": [
     {
       "nombre": "string",
-      "foto_busqueda": "string (3-4 palabras en INGLÉS, ej: colosseum rome italy iconic)",
       "descripcion": "string inspirador en voz VIVANTE"
     }
   ]
@@ -277,7 +274,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
     {
       "numero": número,
       "titulo": "string creativo",
-      "foto_busqueda": "string (3-4 palabras en INGLÉS)",
       "manana": {
         "horario": "string",
         "actividad": "string muy detallado",
@@ -304,7 +300,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "bares_vida_nocturna": [
     {
       "nombre": "string",
-      "foto_busqueda": "string (3-4 palabras en INGLÉS, ej: tokyo rooftop bar night skyline)",
       "tipo_ambiente": "string",
       "precio_trago": "string",
       "mejor_dia": "string (ej: jueves o viernes)",
@@ -380,7 +375,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "lo_imperdible": [
     {
       "nombre": "string",
-      "foto_busqueda": "string (3-4 palabras en INGLÉS, ej: mount fuji japan sunrise iconic)",
       "descripcion": "string inspirador en voz VIVANTE"
     }
   ],
@@ -413,10 +407,30 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
 
     let itinerario;
     try {
-      const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-      itinerario = JSON.parse(jsonMatch ? jsonMatch[0] : rawContent);
+      // Limpiar markdown si el modelo los incluyó
+      const cleaned = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const start = cleaned.indexOf('{');
+      const str = start >= 0 ? cleaned.substring(start) : cleaned;
+
+      // 1. Intento directo
+      let parsed = null;
+      try { parsed = JSON.parse(str); } catch {}
+
+      // 2. Si el JSON fue truncado, buscar desde el último '}' válido hacia atrás
+      if (!parsed) {
+        let pos = str.lastIndexOf('}');
+        while (pos > 0 && !parsed) {
+          try { parsed = JSON.parse(str.substring(0, pos + 1)); }
+          catch { pos = str.lastIndexOf('}', pos - 1); }
+        }
+      }
+
+      if (!parsed) throw new Error('No valid JSON found');
+      itinerario = parsed;
+      console.log('Itinerario parseado OK. Secciones:', Object.keys(itinerario).join(', '));
     } catch (e) {
-      console.error('JSON parse error:', e.message, rawContent.substring(0, 300));
+      console.error('JSON parse error:', e.message);
+      console.error('Raw content preview:', rawContent.substring(0, 600));
       return NextResponse.json({ error: 'Error procesando itinerario' }, { status: 500 });
     }
 
