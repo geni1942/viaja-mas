@@ -24,6 +24,16 @@ function buildFlightUrl(origenIata, destinoIata, fechaSalida, fechaRegreso) {
     : `https://www.google.com/travel/flights#flt=${origenIata}.${destinoIata}.${s};c:USD;e:1;t:f`;
 }
 
+function buildLatamUrl(origenIata, destinoIata, fechaSalida, fechaRegreso, numViajeros) {
+  if (!origenIata || !destinoIata || !fechaSalida) return null;
+  const s = fechaSalida.replace(/-/g, '');
+  const r = fechaRegreso ? fechaRegreso.replace(/-/g, '') : '';
+  const n = numViajeros || 1;
+  let url = `https://www.latam.com/es_cl/apps/personas/booking?fecha1_outbound=${s}&from=${origenIata}&to=${destinoIata}&nro_adu=${n}&cabina=Y&openDatePicker=false`;
+  if (r) url += `&fecha1_inbound=${r}`;
+  return url;
+}
+
 function buildBookingUrl(destino, checkin, checkout, adults) {
   const p = new URLSearchParams({ ss: destino || '', checkin: checkin || '', checkout: checkout || '', group_adults: adults || 2, no_rooms: 1, selected_currency: 'USD' });
   return `https://www.booking.com/searchresults.html?${p}`;
@@ -128,7 +138,12 @@ function ItinerarioContent() {
   // ─── CARGANDO ───────────────────────────────────────────────────────────────
   if (estado === 'cargando') return (
     <div style={{ minHeight: '100vh', background: C.crema, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ fontSize: 60, marginBottom: 24, animation: 'spin 2s linear infinite' }}>✈️</div>
+      <img
+        src="/images/vivante_logo.svg"
+        alt="VIVANTE"
+        style={{ height: 80, width: 'auto', marginBottom: 24, animation: 'spin 2s linear infinite' }}
+        onError={e => { e.target.style.display = 'none'; }}
+      />
       <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 26, color: C.carbon, margin: '0 0 8px', textAlign: 'center' }}>Preparando tu aventura...</h1>
       <p style={{ color: '#666', textAlign: 'center', lineHeight: 1.6 }}>Armando tu itinerario personalizado.<br /><strong>Tarda unos 30 segundos.</strong></p>
       <p style={{ color: C.violeta, fontStyle: 'italic', fontSize: 14, marginTop: 8 }}>Mientras tanto, ¿ya pensaste qué ropa llevar? 😄</p>
@@ -154,6 +169,11 @@ function ItinerarioContent() {
   const isPro = planId === 'pro';
   const res   = itinerario?.resumen || {};
   const flightUrl = buildFlightUrl(res.origen_iata, res.destino_iata, res.fecha_salida, res.fecha_regreso);
+  const latamUrl  = buildLatamUrl(res.origen_iata, res.destino_iata, res.fecha_salida, res.fecha_regreso, formData?.numViajeros);
+
+  // Helpers para redes sociales — usa solo el nombre de la ciudad principal
+  const destRaw = (res.destino || formData?.destino || '').split(/[,(]/)[0].trim();
+  const destTag = destRaw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
 
   const baseTabs = ['resumen', 'dias', 'vuelos', 'alojamiento', 'comer', 'experiencias', 'tips', 'imperdible'];
   const proTabs  = ['resumen', 'dias', 'vuelos', 'alojamiento', 'comer', 'experiencias', 'tips', 'noche', 'transporte', 'conectividad', 'imperdible'];
@@ -276,7 +296,9 @@ function ItinerarioContent() {
                 ['Destino', res.destino || formData?.destino],
                 ['Desde', formData?.origen],
                 ['Duración', `${formData?.dias} días · ${formData?.numViajeros} viajero${formData?.numViajeros > 1 ? 's' : ''}`],
-                ['Fechas sugeridas', res.fecha_optima_texto || `${formatDate(res.fecha_salida)} → ${formatDate(res.fecha_regreso)}`],
+                ['Fecha de ida', formatDate(res.fecha_salida)],
+                ['Fecha de vuelta', formatDate(res.fecha_regreso)],
+                ['Mejor época', res.fecha_optima_texto],
                 ['Distribución', res.distribucion],
                 ['Ritmo', res.ritmo],
               ].filter(r => r[1]).map(([l, v], i) => (
@@ -350,13 +372,20 @@ function ItinerarioContent() {
         {/* ══ VUELOS ═══════════════════════════════════════════════════════════ */}
         <div className="vivante-section print-break" style={{ display: show('vuelos') ? 'block' : 'none' }}>
           <Sec title="✈️ Vuelos Recomendados">
-            {flightUrl && (
-              <div style={{ background: C.bg1, borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 14, color: C.carbon, flex: 1 }}>
+            {(flightUrl || latamUrl) && (
+              <div style={{ background: C.bg1, borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+                <p style={{ margin: '0 0 10px', fontSize: 14, color: C.carbon }}>
                   🔍 Búsqueda pre-filtrada: <strong>{formData?.origen}</strong> → <strong>{itinerario?.resumen?.destino || formData?.destino}</strong>
-                  {res.fecha_salida && ` · ${formatDate(res.fecha_salida)} → ${formatDate(res.fecha_regreso)}`}
-                </span>
-                <BtnLink href={flightUrl} color={C.coral}>Buscar vuelo en Google Flights →</BtnLink>
+                  {res.fecha_salida && <span style={{ color: '#666' }}> · {formatDate(res.fecha_salida)} → {formatDate(res.fecha_regreso)}</span>}
+                </p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {latamUrl && (
+                    <BtnLink href={latamUrl} color="#DA291C">✈️ Buscar en LATAM →</BtnLink>
+                  )}
+                  {flightUrl && (
+                    <BtnLink href={flightUrl} color="#1a73e8">🔍 Buscar en Google Flights →</BtnLink>
+                  )}
+                </div>
               </div>
             )}
             {(itinerario?.vuelos || []).map((v, i) => (
@@ -364,8 +393,11 @@ function ItinerarioContent() {
                 <p style={{ margin: '0 0 4px', fontWeight: 700, color: C.carbon }}>{v.aerolinea} — {v.ruta}</p>
                 <p style={{ margin: '0 0 2px', color: C.coral, fontWeight: 700, fontSize: 18 }}>{v.precio_estimado}</p>
                 {v.duracion && <p style={{ margin: '0 0 4px', color: '#666', fontSize: 13 }}>⏱ {v.duracion}</p>}
-                {v.tip && <p style={{ margin: '0 0 6px', color: C.violeta, fontStyle: 'italic', fontSize: 13 }}>💡 {v.tip}</p>}
-                {flightUrl && <BtnLink href={flightUrl} small>Ver vuelos →</BtnLink>}
+                {v.tip && <p style={{ margin: '0 0 8px', color: C.violeta, fontStyle: 'italic', fontSize: 13 }}>💡 {v.tip}</p>}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {latamUrl && <BtnLink href={latamUrl} small color="#DA291C">Buscar en LATAM →</BtnLink>}
+                  {flightUrl && <BtnLink href={flightUrl} small color="#1a73e8">Google Flights →</BtnLink>}
+                </div>
               </div>
             ))}
           </Sec>
@@ -375,27 +407,52 @@ function ItinerarioContent() {
         <div className="vivante-section print-break" style={{ display: show('alojamiento') ? 'block' : 'none' }}>
           {(itinerario?.alojamiento || []).map((zona, zi) => (
             <Sec key={zi} title={`🏨 Alojamiento en ${zona.destino || 'Destino'}${zona.noches ? ` (${zona.noches} noches)` : ''}`}>
-              {(zona.opciones || []).map((op, oi) => (
-                <div key={oi} style={{ marginBottom: 20, paddingBottom: 20, borderBottom: oi < (zona.opciones.length - 1) ? `1px solid ${C.bg1}` : 'none' }}>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6, alignItems: 'center' }}>
-                    <Tag bg={op.categoria === 'Premium' ? C.fucsia : op.categoria === 'Confort' ? C.coral : '#888'}>{op.categoria}</Tag>
-                    <Tag bg={C.violeta}>{op.plataforma}</Tag>
-                    {op.puntuacion && <Tag bg="#27ae60">⭐ {op.puntuacion}</Tag>}
-                    {op.cancelacion?.toLowerCase().includes('gratuita') && <Tag bg="#2ecc71">✅ Cancelación gratuita</Tag>}
-                  </div>
-                  <p style={{ margin: '6px 0 4px', fontWeight: 700, color: C.carbon, fontSize: 16 }}>{op.nombre}</p>
-                  <p style={{ margin: '0 0 6px', color: C.coral, fontWeight: 700, fontSize: 17 }}>{op.precio_noche} / noche</p>
-                  {(op.highlights || []).length > 0 && (
-                    <p style={{ margin: '0 0 6px', color: '#555', fontSize: 13 }}>
-                      {op.highlights.join(' · ')}
-                    </p>
-                  )}
-                  <p style={{ margin: '0 0 8px', color: C.violeta, fontStyle: 'italic', fontSize: 13 }}>{op.por_que}</p>
-                  <BtnLink href={alojamientoLink(op, zona.destino, res.fecha_salida, res.fecha_regreso, formData?.numViajeros)} color={C.violeta}>
-                    Ver alojamiento →
-                  </BtnLink>
-                </div>
-              ))}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+                  <thead>
+                    <tr style={{ background: C.violeta }}>
+                      {['Categoría', 'Hotel', 'Precio/noche', 'Por qué elegirlo', ''].map(h => (
+                        <th key={h} style={{ padding: '10px 12px', color: '#fff', textAlign: 'left', fontSize: 13, fontWeight: 700 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(zona.opciones || []).map((op, oi) => (
+                      <tr key={oi} style={{ background: oi % 2 === 0 ? C.bg0 : '#fff', verticalAlign: 'top' }}>
+                        <td style={{ padding: '12px 12px' }}>
+                          <Tag bg={op.categoria === 'Premium' ? C.fucsia : op.categoria === 'Confort' ? C.coral : '#888'}>
+                            {op.categoria}
+                          </Tag>
+                          {op.plataforma && (
+                            <p style={{ margin: '4px 0 0', color: '#888', fontSize: 11 }}>{op.plataforma}</p>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 12px' }}>
+                          <p style={{ margin: '0 0 2px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{op.nombre}</p>
+                          {op.puntuacion && <p style={{ margin: '0 0 2px', color: '#27ae60', fontSize: 12 }}>⭐ {op.puntuacion}</p>}
+                          {op.cancelacion?.toLowerCase().includes('gratuita') && (
+                            <p style={{ margin: 0, color: '#27ae60', fontSize: 11 }}>✅ Cancelación gratuita</p>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 12px', color: C.coral, fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap' }}>
+                          {op.precio_noche}<span style={{ color: '#888', fontWeight: 400, fontSize: 11 }}> /noche</span>
+                        </td>
+                        <td style={{ padding: '12px 12px', color: C.violeta, fontStyle: 'italic', fontSize: 13, maxWidth: 200 }}>
+                          {op.por_que}
+                        </td>
+                        <td style={{ padding: '12px 12px' }}>
+                          <BtnLink
+                            href={alojamientoLink(op, zona.destino, res.fecha_salida, res.fecha_regreso, formData?.numViajeros)}
+                            color={C.violeta}
+                            small>
+                            Ver alojamiento →
+                          </BtnLink>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Sec>
           ))}
         </div>
@@ -404,33 +461,38 @@ function ItinerarioContent() {
         <div className="vivante-section print-break" style={{ display: show('comer') ? 'block' : 'none' }}>
           <Sec title="🍽️ Restaurantes Recomendados">
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
                 <thead>
                   <tr style={{ background: C.coral }}>
-                    {['Restaurante', 'Tipo', 'Precio / pax', 'Info / Reserva'].map(h => (
+                    {['Restaurante', 'Ubicación', 'Tipo', 'Precio / pax', '¿Reserva?', ''].map(h => (
                       <th key={h} style={{ padding: '10px 12px', color: '#fff', textAlign: 'left', fontSize: 13 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {(itinerario?.restaurantes || []).map((r, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff' }}>
+                    <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff', verticalAlign: 'top' }}>
                       <td style={{ padding: '10px 12px' }}>
                         <p style={{ margin: '0 0 2px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{r.nombre}</p>
-                        {r.ubicacion && <p style={{ margin: 0, color: '#888', fontSize: 12 }}>{r.ubicacion}</p>}
-                        {r.por_que && <p style={{ margin: '2px 0 0', color: C.violeta, fontStyle: 'italic', fontSize: 12 }}>{r.por_que}</p>}
+                        {r.por_que && <p style={{ margin: 0, color: C.violeta, fontStyle: 'italic', fontSize: 12 }}>{r.por_que}</p>}
                       </td>
+                      <td style={{ padding: '10px 12px', color: '#666', fontSize: 13 }}>{r.ubicacion || '—'}</td>
                       <td style={{ padding: '10px 12px', color: '#555', fontSize: 13 }}>{r.tipo}</td>
                       <td style={{ padding: '10px 12px', color: C.coral, fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>{r.precio_promedio}</td>
+                      <td style={{ padding: '10px 12px', textAlign: 'center', fontSize: 18 }}>
+                        {r.requiere_reserva ? '✅' : '—'}
+                      </td>
                       <td style={{ padding: '10px 12px' }}>
                         {r.link_reserva
-                          ? <BtnLink href={r.link_reserva} small color={r.requiere_reserva ? C.fucsia : C.coral}>{r.requiere_reserva ? 'Reservar →' : 'Ver →'}</BtnLink>
-                          : <span style={{ fontSize: 12, color: '#aaa' }}>Sin reserva</span>}
-                        {r.instagram && (
-                          <BtnLink href={`https://instagram.com/${r.instagram.replace('@', '')}`} small color="#E1306C" style={{ marginLeft: 4 }}>
-                            {r.instagram}
-                          </BtnLink>
-                        )}
+                          ? <BtnLink href={r.link_reserva} small color={r.requiere_reserva ? C.fucsia : C.coral}>
+                              {r.requiere_reserva ? 'Reservar →' : 'Ver →'}
+                            </BtnLink>
+                          : r.instagram
+                          ? <BtnLink href={`https://instagram.com/${r.instagram.replace('@', '')}`} small color="#E1306C">
+                              {r.instagram}
+                            </BtnLink>
+                          : <span style={{ fontSize: 12, color: '#aaa' }}>Sin reserva</span>
+                        }
                       </td>
                     </tr>
                   ))}
@@ -443,20 +505,38 @@ function ItinerarioContent() {
         {/* ══ EXPERIENCIAS ═════════════════════════════════════════════════════ */}
         <div className="vivante-section print-break" style={{ display: show('experiencias') ? 'block' : 'none' }}>
           <Sec title="🎟️ Experiencias y Tours">
-            {(itinerario?.experiencias || []).map((exp, ei) => (
-              <div key={ei} style={{ marginBottom: 24, paddingBottom: 24, borderBottom: ei < (itinerario.experiencias.length - 1) ? `1px solid ${C.bg1}` : 'none' }}>
-                <Photo keyword={exp.foto_busqueda} seed={ei + 100} height={200} />
-                <p style={{ margin: '0 0 4px', fontWeight: 700, color: C.carbon, fontSize: 16 }}>{exp.nombre}</p>
-                <p style={{ margin: '0 0 8px', color: '#555', fontSize: 14, lineHeight: 1.5 }}>{exp.por_que_vale}</p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-                  {exp.duracion && <Tag bg="#888">⏱ {exp.duracion}</Tag>}
-                  {exp.precio && <Tag bg={C.coral}>💰 {exp.precio}</Tag>}
-                  {exp.anticipacion && <Tag bg={C.fucsia}>📅 {exp.anticipacion}</Tag>}
-                </div>
-                {exp.link && <BtnLink href={exp.link} color={C.coral}>Reservar experiencia →</BtnLink>}
+            {(itinerario?.experiencias?.length > 0) ? (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 580 }}>
+                  <thead>
+                    <tr style={{ background: C.coral }}>
+                      {['Experiencia', 'Por qué vale', 'Duración', 'Precio', 'Reservar con anticipación', ''].map(h => (
+                        <th key={h} style={{ padding: '10px 12px', color: '#fff', textAlign: 'left', fontSize: 13 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(itinerario.experiencias || []).map((exp, ei) => (
+                      <tr key={ei} style={{ background: ei % 2 === 0 ? C.bg0 : '#fff', verticalAlign: 'top' }}>
+                        <td style={{ padding: '10px 12px' }}>
+                          <p style={{ margin: 0, fontWeight: 700, color: C.carbon, fontSize: 14 }}>{exp.nombre}</p>
+                        </td>
+                        <td style={{ padding: '10px 12px', color: '#555', fontSize: 13, maxWidth: 180 }}>{exp.por_que_vale}</td>
+                        <td style={{ padding: '10px 12px', color: '#666', fontSize: 13, whiteSpace: 'nowrap' }}>{exp.duracion || '—'}</td>
+                        <td style={{ padding: '10px 12px', color: C.coral, fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap' }}>{exp.precio || '—'}</td>
+                        <td style={{ padding: '10px 12px', color: '#666', fontSize: 13 }}>{exp.anticipacion || '—'}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          {exp.link
+                            ? <BtnLink href={exp.link} small color={C.coral}>Reservar →</BtnLink>
+                            : <span style={{ fontSize: 12, color: '#aaa' }}>—</span>
+                          }
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
-            {(!itinerario?.experiencias || itinerario.experiencias.length === 0) && (
+            ) : (
               <p style={{ color: '#888', fontStyle: 'italic' }}>Las experiencias se incluyen en el itinerario día a día.</p>
             )}
           </Sec>
@@ -513,16 +593,21 @@ function ItinerarioContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {itinerario.seguro.map((s, i) => (
-                      <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff' }}>
-                        <td style={{ padding: '10px 12px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{s.nombre}</td>
-                        <td style={{ padding: '10px 12px', color: '#555', fontSize: 13 }}>{s.cobertura}</td>
-                        <td style={{ padding: '10px 12px', color: C.coral, fontWeight: 700 }}>{s.precio_estimado}</td>
-                        <td style={{ padding: '10px 12px' }}>
-                          <BtnLink href={s.link} color={C.fucsia} small>COTIZAR</BtnLink>
-                        </td>
-                      </tr>
-                    ))}
+                    {itinerario.seguro.map((s, i) => {
+                      const iatiUrl = s.nombre?.toLowerCase().includes('iati')
+                        ? 'https://www.iatiseguros.com/'
+                        : s.link;
+                      return (
+                        <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff' }}>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{s.nombre}</td>
+                          <td style={{ padding: '10px 12px', color: '#555', fontSize: 13 }}>{s.cobertura}</td>
+                          <td style={{ padding: '10px 12px', color: C.coral, fontWeight: 700 }}>{s.precio_estimado}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <BtnLink href={iatiUrl} color={C.fucsia} small>COTIZAR</BtnLink>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -571,6 +656,60 @@ function ItinerarioContent() {
                   {b.tip && <p style={{ margin: 0, color: C.violeta, fontStyle: 'italic', fontSize: 13 }}>💡 {b.tip}</p>}
                 </div>
               ))}
+            </Sec>
+
+            {/* ── Social media discovery ── */}
+            <Sec title="📱 Descubre más en redes sociales" bg={C.fucsia}>
+              <p style={{ margin: '0 0 14px', color: '#555', fontSize: 14 }}>
+                Buscá recomendaciones reales de viajeros para <strong>{destRaw}</strong>:
+              </p>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 380 }}>
+                  <thead>
+                    <tr style={{ background: C.fucsia }}>
+                      {['Plataforma', 'Búsqueda', ''].map(h => (
+                        <th key={h} style={{ padding: '10px 12px', color: '#fff', textAlign: 'left', fontSize: 13 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        plat: '🎵 TikTok',
+                        label: `${destRaw} restaurantes locales`,
+                        url: `https://www.tiktok.com/search?q=${encodeURIComponent(destRaw + ' restaurantes locales')}`,
+                        color: '#010101',
+                      },
+                      {
+                        plat: '🎵 TikTok',
+                        label: `${destRaw} hidden gems`,
+                        url: `https://www.tiktok.com/search?q=${encodeURIComponent(destRaw + ' hidden gems')}`,
+                        color: '#010101',
+                      },
+                      {
+                        plat: '📸 Instagram',
+                        label: `#${destTag}food`,
+                        url: `https://www.instagram.com/explore/tags/${destTag}food/`,
+                        color: '#E1306C',
+                      },
+                      {
+                        plat: '📸 Instagram',
+                        label: `#${destTag}travel`,
+                        url: `https://www.instagram.com/explore/tags/${destTag}travel/`,
+                        color: '#E1306C',
+                      },
+                    ].map((row, i) => (
+                      <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff' }}>
+                        <td style={{ padding: '11px 12px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{row.plat}</td>
+                        <td style={{ padding: '11px 12px', color: '#555', fontSize: 13 }}>{row.label}</td>
+                        <td style={{ padding: '11px 12px' }}>
+                          <BtnLink href={row.url} small color={row.color}>Ver →</BtnLink>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Sec>
           </div>
         )}
@@ -695,7 +834,7 @@ function ItinerarioContent() {
       <div style={{ background: C.coral, padding: '32px 20px', textAlign: 'center', marginTop: 12 }}>
         <img src="/images/vivante_logo.svg" alt="VIVANTE" style={{ height: 44, width: 'auto', marginBottom: 10 }}
           onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
-        <span style={{ display: 'none', color: '#fff', fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 800, display: 'block', marginBottom: 8 }}>VIVANTE</span>
+        <span style={{ display: 'none', color: '#fff', fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>VIVANTE</span>
         <p style={{ color: 'rgba(255,255,255,0.9)', margin: '0 0 12px', fontSize: 15 }}>
           ¡Que tengas el viaje de tu vida, {formData?.nombre}! ✈️
         </p>
