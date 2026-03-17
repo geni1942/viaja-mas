@@ -13,7 +13,10 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Configuración de pago incompleta' }, { status: 500 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://vivante.vercel.app';
+    // Detectar si estamos en modo test (credenciales de prueba empiezan con TEST-)
+    const isTestMode = accessToken.startsWith('TEST-');
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://vivevivante.com';
 
     const preference = {
       items: [
@@ -36,7 +39,6 @@ export async function POST(req) {
       },
       auto_return: 'approved',
       external_reference: email,
-      notification_url: `${baseUrl}/api/payment/webhook`,
       statement_descriptor: 'VIVANTE TRAVEL',
     };
 
@@ -52,11 +54,19 @@ export async function POST(req) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('MP error:', data);
-      return NextResponse.json({ error: 'Error al crear preferencia de pago' }, { status: 500 });
+      console.error('MP error response:', JSON.stringify(data));
+      return NextResponse.json(
+        { error: 'Error al crear preferencia de pago', detail: data?.message || '' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ init_point: data.init_point });
+    // En modo test usar sandbox_init_point, en produccion usar init_point
+    const checkoutUrl = isTestMode
+      ? (data.sandbox_init_point || data.init_point)
+      : data.init_point;
+
+    return NextResponse.json({ init_point: checkoutUrl });
   } catch (error) {
     console.error('Payment preference error:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
