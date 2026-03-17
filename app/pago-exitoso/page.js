@@ -15,25 +15,6 @@ const C = {
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function buildFlightUrl(origenIata, destinoIata, fechaSalida, fechaRegreso) {
-  if (!origenIata || !destinoIata || !fechaSalida) return null;
-  const s = fechaSalida.replace(/-/g, '');
-  const r = fechaRegreso ? fechaRegreso.replace(/-/g, '') : '';
-  return r
-    ? `https://www.google.com/travel/flights#flt=${origenIata}.${destinoIata}.${s}*${destinoIata}.${origenIata}.${r};c:USD;e:1;sd:1;t:f`
-    : `https://www.google.com/travel/flights#flt=${origenIata}.${destinoIata}.${s};c:USD;e:1;t:f`;
-}
-
-function buildLatamUrl(origenIata, destinoIata, fechaSalida, fechaRegreso, numViajeros) {
-  if (!origenIata || !destinoIata || !fechaSalida) return null;
-  const s = fechaSalida.replace(/-/g, '');
-  const r = fechaRegreso ? fechaRegreso.replace(/-/g, '') : '';
-  const n = numViajeros || 1;
-  let url = `https://www.latam.com/es_cl/apps/personas/booking?fecha1_outbound=${s}&from=${origenIata}&to=${destinoIata}&nro_adu=${n}&cabina=Y&openDatePicker=false`;
-  if (r) url += `&fecha1_inbound=${r}`;
-  return url;
-}
-
 function buildBookingUrl(destino, checkin, checkout, adults) {
   const p = new URLSearchParams({ ss: destino || '', checkin: checkin || '', checkout: checkout || '', group_adults: adults || 2, no_rooms: 1, selected_currency: 'USD' });
   return `https://www.booking.com/searchresults.html?${p}`;
@@ -258,8 +239,6 @@ function ItinerarioContent() {
   // ─── DATOS LISTOS ───────────────────────────────────────────────────────────
   const isPro = planId === 'pro';
   const res   = itinerario?.resumen || {};
-  const flightUrl = buildFlightUrl(res.origen_iata, res.destino_iata, res.fecha_salida, res.fecha_regreso);
-  const latamUrl  = buildLatamUrl(res.origen_iata, res.destino_iata, res.fecha_salida, res.fecha_regreso, formData?.numViajeros);
 
   // Helpers para redes sociales — usa solo el nombre de la ciudad principal
   const destRaw = (res.destino || formData?.destino || '').split(/[,(]/)[0].trim();
