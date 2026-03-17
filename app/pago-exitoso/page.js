@@ -622,6 +622,11 @@ function ItinerarioContent() {
                       const q = encodeURIComponent((exp.nombre || '') + ' ' + destRaw);
                       const gygUrl = `https://www.getyourguide.com/s/?q=${q}&searchSource=2`;
                       const viatorUrl = `https://www.viator.com/search?q=${q}`;
+                      // plataformas_disponibles: undefined → mostrar ambas (backward compat); [] → ninguna; ["X"] → solo X
+                      const plats = exp.plataformas_disponibles;
+                      const showGyg    = !plats || plats.includes('GetYourGuide');
+                      const showViator = !plats || plats.includes('Viator');
+                      const showNone   = Array.isArray(plats) && plats.length === 0;
                       return (
                       <tr key={ei} style={{ background: ei % 2 === 0 ? C.bg0 : '#fff', verticalAlign: 'top' }}>
                         <td style={{ padding: '10px 12px' }}>
@@ -633,8 +638,9 @@ function ItinerarioContent() {
                         <td style={{ padding: '10px 12px', color: '#666', fontSize: 12 }}>{exp.anticipacion || '—'}</td>
                         <td style={{ padding: '10px 12px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            <BtnLink href={gygUrl} small color="#FF6600">GetYourGuide →</BtnLink>
-                            <BtnLink href={viatorUrl} small color="#333">Viator →</BtnLink>
+                            {showGyg    && <BtnLink href={gygUrl}    small color="#FF6600">GetYourGuide →</BtnLink>}
+                            {showViator && <BtnLink href={viatorUrl}  small color="#333">Viator →</BtnLink>}
+                            {showNone   && <span style={{ fontSize: 12, color: '#999', fontStyle: 'italic' }}>Reservar localmente</span>}
                           </div>
                         </td>
                       </tr>
