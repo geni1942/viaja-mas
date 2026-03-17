@@ -82,9 +82,10 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
 
     const restaurantesSchema = `
 "restaurantes": [
+  IMPORTANTE: incluye entre 8 y 10 restaurantes variados (distintos barrios, tipos de cocina y rangos de precio).
   {
     "nombre": "string (nombre real del restaurante)",
-    "ubicacion": "string (barrio/zona)",
+    "ubicacion": "string (barrio/zona específica)",
     "tipo": "string (ej: Japonés tradicional, Tapas modernas)",
     "precio_promedio": "string (ej: $15-25 USD por persona)",
     "requiere_reserva": boolean,
@@ -193,7 +194,7 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "seguro": [
     { "nombre": "Assist Card", "cobertura": "string adaptada al destino", "precio_estimado": "string USD", "link": "https://www.assistcard.com/cl/cotizar" },
     { "nombre": "World Nomads", "cobertura": "string", "precio_estimado": "string USD", "link": "https://www.worldnomads.com/es/travel-insurance" },
-    { "nombre": "IATI Seguros", "cobertura": "string", "precio_estimado": "string USD", "link": "https://www.iatitravel.com/seguros-viaje/" }
+    { "nombre": "IATI Seguros", "cobertura": "string", "precio_estimado": "string USD", "link": "https://www.iatiseguros.com/" }
   ],
   "checklist": ["string", "string", "string", "string", "string", "string", "string", "string"],
   "emergencias": {
@@ -346,7 +347,7 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "seguro": [
     { "nombre": "Assist Card", "cobertura": "string adaptada al destino", "precio_estimado": "string USD", "link": "https://www.assistcard.com/cl/cotizar" },
     { "nombre": "World Nomads", "cobertura": "string", "precio_estimado": "string USD", "link": "https://www.worldnomads.com/es/travel-insurance" },
-    { "nombre": "IATI Seguros", "cobertura": "string", "precio_estimado": "string USD", "link": "https://www.iatitravel.com/seguros-viaje/" }
+    { "nombre": "IATI Seguros", "cobertura": "string", "precio_estimado": "string USD", "link": "https://www.iatiseguros.com/" }
   ],
   "checklist": ["string", "string", "string", "string", "string", "string", "string", "string", "string", "string"],
   "emergencias": {
@@ -430,7 +431,8 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
       <h2 style="color:#FF6332;font-size:18px;margin:0 0 12px;">📊 Resumen</h2>
       <p style="margin:4px 0;"><strong>Destino:</strong> ${itinerario.resumen?.destino || formData.destino}</p>
       <p style="margin:4px 0;"><strong>Duración:</strong> ${formData.dias} días · ${formData.numViajeros} viajero${formData.numViajeros > 1 ? 's' : ''}</p>
-      <p style="margin:4px 0;"><strong>Fechas sugeridas:</strong> ${itinerario.resumen?.fecha_optima_texto || 'Ver en el itinerario'}</p>
+      <p style="margin:4px 0;"><strong>Fecha de ida:</strong> ${itinerario.resumen?.fecha_salida || 'Ver en el itinerario'}</p>
+      <p style="margin:4px 0;"><strong>Fecha de vuelta:</strong> ${itinerario.resumen?.fecha_regreso || 'Ver en el itinerario'}</p>
       <p style="margin:4px 0;"><strong>Presupuesto estimado:</strong> ${itinerario.presupuesto_desglose?.total || ''}</p>
     </div>
 
