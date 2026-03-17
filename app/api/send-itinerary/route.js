@@ -81,19 +81,22 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
 ]`;
 
     const restaurantesSchema = `
-"restaurantes": [
-  {
-    "nombre": "string (nombre real del restaurante)",
-    "ubicacion": "string (barrio/zona específica)",
-    "tipo": "string (ej: Japonés tradicional, Tapas modernas)",
-    "precio_promedio": "string (ej: $15-25 USD por persona)",
-    "requiere_reserva": boolean,
-    "por_que": "string en voz VIVANTE de por qué vale la pena",
-    "link_reserva": "usa siempre Google Maps search: https://www.google.com/maps/search/NOMBRE+CIUDAD (siempre válido y funcional)",
-    "instagram": "string @handle o null"
-  }
-]
-Incluye EXACTAMENTE entre 8 y 10 restaurantes variados: distintos barrios, tipos de cocina y rangos de precio.`;
+"restaurantes": {
+  "NOMBRE_CIUDAD_1": [
+    {
+      "nombre": "string (nombre real del restaurante)",
+      "ubicacion": "string (barrio/zona específica)",
+      "tipo": "string (ej: Japonés tradicional, Tapas modernas)",
+      "precio_promedio": "string (ej: $15-25 USD por persona)",
+      "requiere_reserva": boolean,
+      "por_que": "string en voz VIVANTE de por qué vale la pena",
+      "link_reserva": "usa siempre Google Maps search: https://www.google.com/maps/search/NOMBRE+CIUDAD",
+      "instagram": "string @handle o null"
+    }
+  ],
+  "NOMBRE_CIUDAD_2": [ ... mismos campos, 3 restaurantes ... ]
+}
+IMPORTANTE: Usa el nombre REAL de cada ciudad visitada como clave del objeto. Incluye EXACTAMENTE 3 restaurantes por ciudad. Varía barrios, tipos de cocina y rangos de precio.`;
 
     const experienciasSchema = `
 "experiencias": [
@@ -111,6 +114,10 @@ Incluye EXACTAMENTE entre 8 y 10 restaurantes variados: distintos barrios, tipos
     // ─── PROMPT BÁSICO ─────────────────────────────────────────────────────────
     const promptBasico = `Eres el planificador de VIVANTE. Crea un itinerario COMPLETO con el tono VIVANTE: cercano, directo, como un amigo experto. Precios realistas para ${currentYear}.
 ${clienteCtx}
+
+REGLAS IMPORTANTES:
+- VUELOS: incluye mínimo 3 aerolíneas distintas. La PRIMERA opción debe ser vuelo DIRECTO (si existe la ruta), las siguientes con 1 o 2 escalas.
+- RESTAURANTES: incluye exactamente 3 restaurantes por cada ciudad/destino visitado, agrupados por ciudad.
 
 GENERA JSON puro (sin markdown, sin \`\`\`):
 {
@@ -143,9 +150,10 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "vuelos": [
     {
       "aerolinea": "string",
-      "ruta": "string",
+      "ruta": "string (ej: SCL → NRT directo, o SCL → LIM → NRT vía Lima)",
       "precio_estimado": "string",
-      "duracion": "string",
+      "duracion": "string (ej: 14h directo, 22h con 1 escala)",
+      "escala": "string (Directo / 1 escala en CIUDAD / 2 escalas)",
       "tip": "string insider"
     }
   ],
@@ -215,6 +223,11 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
     const promptPro = `Eres el planificador PRO de VIVANTE. Itinerario PREMIUM ultra-detallado, con el tono cálido y experto VIVANTE. Precios realistas para ${currentYear}.
 ${clienteCtx}
 
+REGLAS IMPORTANTES:
+- VUELOS: incluye mínimo 3 aerolíneas distintas. La PRIMERA opción debe ser vuelo DIRECTO (si existe la ruta), las siguientes con 1 o 2 escalas.
+- RESTAURANTES: incluye exactamente 3 restaurantes por cada ciudad/destino visitado, agrupados por ciudad.
+- TRANSPORTE aeropuerto→centro: lista TODAS las opciones disponibles (Uber, Taxi, Metro, Bus express, Tren, etc.) con costo estimado y duración en el array opciones_aeropuerto_centro.
+
 GENERA JSON puro (sin markdown, sin \`\`\`):
 {
   "titulo": "string creativo",
@@ -246,9 +259,10 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
   "vuelos": [
     {
       "aerolinea": "string",
-      "ruta": "string",
+      "ruta": "string (ej: SCL → NRT directo, o SCL → LIM → NRT vía Lima)",
       "precio_estimado": "string",
-      "duracion": "string",
+      "duracion": "string (ej: 14h directo, 22h con 1 escala)",
+      "escala": "string (Directo / 1 escala en CIUDAD / 2 escalas)",
       "tip": "string insider"
     }
   ],
@@ -296,7 +310,9 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
     "como_moverse": "string",
     "apps_recomendadas": ["string"],
     "tarjeta_transporte": "string",
-    "costo_aeropuerto_centro": "string",
+    "opciones_aeropuerto_centro": [
+      { "medio": "string (ej: Uber, Taxi, Metro, Bus express, Tren)", "costo": "string (ej: $25-35 USD)", "duracion": "string (ej: 45 min)", "tip": "string o null" }
+    ],
     "conviene_auto": "string (sí/no con razón)"
   },
   "dinero": {
