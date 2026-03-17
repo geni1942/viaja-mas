@@ -82,7 +82,6 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
 
     const restaurantesSchema = `
 "restaurantes": [
-  IMPORTANTE: incluye entre 8 y 10 restaurantes variados (distintos barrios, tipos de cocina y rangos de precio).
   {
     "nombre": "string (nombre real del restaurante)",
     "ubicacion": "string (barrio/zona específica)",
@@ -90,10 +89,11 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
     "precio_promedio": "string (ej: $15-25 USD por persona)",
     "requiere_reserva": boolean,
     "por_que": "string en voz VIVANTE de por qué vale la pena",
-    "link_reserva": "IMPORTANTE: usa siempre una URL válida. Prioriza: 1) TheFork si existe, 2) OpenTable si existe, 3) Google Maps search: https://www.google.com/maps/search/NOMBRE+CIUDAD (siempre válido), 4) TripAdvisor: https://www.tripadvisor.com/Search?q=NOMBRE+CIUDAD",
+    "link_reserva": "usa siempre Google Maps search: https://www.google.com/maps/search/NOMBRE+CIUDAD (siempre válido y funcional)",
     "instagram": "string @handle o null"
   }
-]`;
+]
+Incluye EXACTAMENTE entre 8 y 10 restaurantes variados: distintos barrios, tipos de cocina y rangos de precio.`;
 
     const experienciasSchema = `
 "experiencias": [
@@ -377,7 +377,7 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: isPro ? promptPro : promptBasico }],
         temperature: 0.7,
-        max_tokens: isPro ? 8000 : 5000,
+        max_tokens: isPro ? 8000 : 7000,
       }),
     });
 
