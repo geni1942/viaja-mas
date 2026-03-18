@@ -620,7 +620,7 @@ function ItinerarioContent() {
                   <tbody>
                     {(itinerario.experiencias || []).map((exp, ei) => {
                       const q = encodeURIComponent((exp.nombre || '') + ' ' + destRaw);
-                      const gygUrl = `https://www.getyourguide.com/s/?q=${q}&searchSource=2`;
+                      const gygUrl = `https://www.getyourguide.com/s/?q=${q}&partner_id=UCJJVUD`;
                       const viatorUrl = `https://www.viator.com/search?q=${q}`;
                       // plataformas_disponibles: undefined → mostrar ambas (backward compat); [] → ninguna; ["X"] → solo X
                       const plats = exp.plataformas_disponibles;
@@ -892,6 +892,19 @@ function ItinerarioContent() {
               <Sec title="📱 Conectividad">
                 {[
                   ['eSIM recomendada', itinerario.conectividad.esim_recomendada],
+                ].filter(r => r[1]).map(([l, v], i) => (
+                  <div key={i} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: `1px solid ${C.bg1}` }}>
+                    <p style={{ margin: '0 0 2px', fontWeight: 700, color: C.coral, fontSize: 13 }}>{l}</p>
+                    <p style={{ margin: '0 0 8px', color: C.carbon, fontSize: 14 }}>{v}</p>
+                    {l === 'eSIM recomendada' && (
+                      <a href="https://airalo.tpx.lt/UPNJmvRR" target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-block', background: '#1a1a2e', color: '#fff', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                        📲 Comprar eSIM en Airalo →
+                      </a>
+                    )}
+                  </div>
+                ))}
+                {[
                   ['SIM local', itinerario.conectividad.sim_local],
                   ['Roaming', itinerario.conectividad.roaming],
                   ['WiFi en destino', itinerario.conectividad.wifi_destino],
