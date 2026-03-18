@@ -620,8 +620,9 @@ function ItinerarioContent() {
                   <tbody>
                     {(itinerario.experiencias || []).map((exp, ei) => {
                       const q = encodeURIComponent((exp.nombre || '') + ' ' + destRaw);
-                      const gygUrl = `https://www.getyourguide.com/s/?q=${q}&partner_id=UCJJVUD`;
-                      const viatorUrl = `https://www.viator.com/search?q=${q}`;
+                      // Usar link específico del AI si existe, sino búsqueda genérica
+                      const gygUrl = exp.link_gyg || `https://www.getyourguide.com/s/?q=${q}&partner_id=UCJJVUD`;
+                      const viatorUrl = exp.link_viator || `https://www.viator.com/search?q=${q}`;
                       // plataformas_disponibles: undefined → mostrar ambas (backward compat); [] → ninguna; ["X"] → solo X
                       const plats = exp.plataformas_disponibles;
                       const showGyg    = !plats || plats.includes('GetYourGuide');
