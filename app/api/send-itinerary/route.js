@@ -116,8 +116,7 @@ IMPORTANTE: Reemplaza NOMBRE_REAL_CIUDAD_1 y NOMBRE_REAL_CIUDAD_2 con los nombre
     "precio": "string (ej: $25-40 USD por persona)",
     "anticipacion": "string (ej: Reservar con 1 semana de anticipación)",
     "plataformas_disponibles": ["GetYourGuide", "Viator"],
-    "link_gyg": "URL de la actividad en GetYourGuide. Si conoces la URL exacta del tour úsala; si no, usa búsqueda: https://www.getyourguide.com/s/?q=NOMBRE+ACTIVIDAD+CIUDAD&partner_id=UCJJVUD. Pon null si no está en GYG.",
-    "link_viator": "URL de la actividad en Viator. Si conoces la URL exacta úsala; si no, usa búsqueda: https://www.viator.com/search?q=NOMBRE+ACTIVIDAD+CIUDAD. Pon null si no está en Viator."
+    "link_gyg": "URL directa del tour en GetYourGuide si la conoces con certeza, o null. Ejemplo: https://www.getyourguide.com/barcelona-l45/sagrada-familia-skip-the-line-t12345/ — NO inventes URLs. Si no estás seguro, pon null."
   }
 ]
 IMPORTANTE sobre plataformas_disponibles: La GRAN MAYORÍA de tours, excursiones y actividades turísticas están disponibles en GetYourGuide y/o Viator. Por defecto usa ["GetYourGuide","Viator"]. Usa [] ÚNICAMENTE para actividades completamente locales/gratuitas que NO se comercializan online (ej: entrar a una iglesia gratis, caminar por un barrio, mercado local sin entrada). En caso de duda, siempre incluye GetYourGuide.`;
@@ -238,6 +237,9 @@ REGLAS IMPORTANTES:
 - ALOJAMIENTO: Recomienda SOLO hoteles/alojamientos con nombre REAL y verificable. Prioriza cadenas conocidas (Hilton, Marriott, NH, Ibis, Radisson, Hyatt, etc.) o boutiques con alta presencia online. NUNCA inventes nombres de hoteles. SIEMPRE incluye EXACTAMENTE 3 opciones por ciudad: Económico, Confort y Premium. Nunca menos de 3.
 - RESTAURANTES: incluye exactamente 3 restaurantes por cada ciudad/destino visitado, agrupados por ciudad.
 - TRANSPORTE aeropuerto→centro: lista TODAS las opciones disponibles (Uber, Taxi, Metro, Bus express, Tren, etc.) con costo estimado y duración en el array opciones_aeropuerto_centro.
+- BARES: en bares_vida_nocturna usa un objeto cuyas claves son los nombres REALES de las ciudades visitadas. Incluye EXACTAMENTE 2 bares/lugares por ciudad.
+- EXTRAS: las categorías deben relacionarse directamente con los intereses del cliente (${Array.isArray(formData.intereses) ? formData.intereses.join(', ') : 'cultura, aventura'}). Ejemplo: si tiene 'gastronomia' → categoría gastronómica; si tiene 'aventura' → actividades de adrenalina. Siempre incluir una categoría "Para días de lluvia o descanso".
+- QUE_EMPACAR: adapta el clima_esperado a las fechas reales propuestas (fecha_salida / fecha_regreso). La lista de ropa debe ser práctica y concisa para el tipo de viaje y el clima del destino.
 
 GENERA JSON puro (sin markdown, sin \`\`\`):
 {
@@ -305,15 +307,16 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
     }
   ],
   ${restaurantesSchema},
-  "bares_vida_nocturna": [
-    {
-      "nombre": "string",
-      "tipo_ambiente": "string",
-      "precio_trago": "string",
-      "mejor_dia": "string (ej: jueves o viernes)",
-      "tip": "string"
-    }
-  ],
+  "bares_vida_nocturna": {
+    "NOMBRE_REAL_CIUDAD_1": [
+      { "nombre": "string", "tipo_ambiente": "string", "precio_trago": "string", "mejor_dia": "string (ej: jueves)", "tip": "string" },
+      { "nombre": "string 2", "tipo_ambiente": "string", "precio_trago": "string", "mejor_dia": "string", "tip": "string" }
+    ],
+    "NOMBRE_REAL_CIUDAD_2": [
+      { "nombre": "string", "tipo_ambiente": "string", "precio_trago": "string", "mejor_dia": "string", "tip": "string" },
+      { "nombre": "string 2", "tipo_ambiente": "string", "precio_trago": "string", "mejor_dia": "string", "tip": "string" }
+    ]
+  },
   ${experienciasSchema},
   "transporte_local": {
     "como_moverse": "string",
@@ -386,8 +389,17 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
       "descripcion": "string inspirador en voz VIVANTE"
     }
   ],
+  "que_empacar": {
+    "clima_esperado": "string (temperaturas mín y máx esperadas en las fechas del viaje, si llueve, humedad, etc.)",
+    "ropa": ["string (ej: 5 poleras de manga corta)", "string (ej: 1 chaqueta liviana para noches)", "string (ej: 2 pantalones cómodos)", "string (ej: 1 traje de baño)", "string (ej: zapatillas cómodas para caminar)", "string (ej: ropa de abrigo para noches)"],
+    "adaptador_enchufe": "string (tipo de enchufe del país, voltaje y si el viajero chileno necesita adaptador o no, y dónde comprarlo)",
+    "botiquin": ["string (ej: analgésicos tipo paracetamol)", "string (ej: antihistamínico para alergias)", "string (ej: protector solar SPF50+)", "string (ej: repelente de mosquitos si aplica)", "string (ej: vendas, alcohol y desinfectante)"],
+    "power_bank": "string (recomendación concreta según duración y destino: capacidad en mAh sugerida, si es necesario, adaptadores de carga)"
+  },
   "extras": [
-    { "categoria": "string (Cultural/Gastronómica/Para días de lluvia)", "actividades": ["string"] }
+    { "categoria": "string - categoría basada en los intereses del cliente (${Array.isArray(formData.intereses) ? formData.intereses.join(', ') : 'cultura, aventura'})", "actividades": ["string", "string", "string"] },
+    { "categoria": "string - segunda categoría basada en intereses", "actividades": ["string", "string", "string"] },
+    { "categoria": "Para días de lluvia o descanso", "actividades": ["string", "string", "string"] }
   ]
 }`;
 
