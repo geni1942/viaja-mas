@@ -116,10 +116,11 @@ IMPORTANTE: Reemplaza NOMBRE_REAL_CIUDAD_1 y NOMBRE_REAL_CIUDAD_2 con los nombre
     "precio": "string (ej: $25-40 USD por persona)",
     "anticipacion": "string (ej: Reservar con 1 semana de anticipación)",
     "plataformas_disponibles": ["GetYourGuide", "Viator"],
-    "link": "URL REAL de la actividad en Civitatis, GetYourGuide o Viator. Si no tienes la URL exacta, usa búsqueda: GetYourGuide: https://www.getyourguide.com/s/?q=ACTIVIDAD+CIUDAD&searchSource=2, Civitatis: https://www.civitatis.com/es/CIUDAD/?q=ACTIVIDAD, Viator: https://www.viator.com/search?q=ACTIVIDAD+CIUDAD"
+    "link_gyg": "URL de la actividad en GetYourGuide. Si conoces la URL exacta del tour úsala; si no, usa búsqueda: https://www.getyourguide.com/s/?q=NOMBRE+ACTIVIDAD+CIUDAD&partner_id=UCJJVUD. Pon null si no está en GYG.",
+    "link_viator": "URL de la actividad en Viator. Si conoces la URL exacta úsala; si no, usa búsqueda: https://www.viator.com/search?q=NOMBRE+ACTIVIDAD+CIUDAD. Pon null si no está en Viator."
   }
 ]
-IMPORTANTE sobre plataformas_disponibles: incluye SOLO las plataformas donde esta actividad específica está realmente disponible. Usa ["GetYourGuide"] si solo está en GYG, ["Viator"] si solo está en Viator, ["GetYourGuide","Viator"] si está en ambas. Usa [] si es una actividad muy local/independiente no comercializada en estas plataformas. Basa esto en tu conocimiento real de qué tours se venden en cada plataforma.`;
+IMPORTANTE sobre plataformas_disponibles: La GRAN MAYORÍA de tours, excursiones y actividades turísticas están disponibles en GetYourGuide y/o Viator. Por defecto usa ["GetYourGuide","Viator"]. Usa [] ÚNICAMENTE para actividades completamente locales/gratuitas que NO se comercializan online (ej: entrar a una iglesia gratis, caminar por un barrio, mercado local sin entrada). En caso de duda, siempre incluye GetYourGuide.`;
 
     // ─── PROMPT BÁSICO ─────────────────────────────────────────────────────────
     const promptBasico = `Eres el planificador de VIVANTE. Crea un itinerario COMPLETO con el tono VIVANTE: cercano, directo, como un amigo experto. Precios realistas para ${currentYear}.
@@ -127,9 +128,8 @@ ${clienteCtx}
 
 REGLAS IMPORTANTES:
 - VUELOS: Usa tu conocimiento real de rutas aéreas. Incluye mínimo 3 aerolíneas distintas. SOLO pon escala="Directo" si existe un vuelo directo real en esa ruta específica. Si NO hay vuelo directo, nunca lo inventes — pon la mejor conexión con ciudad real de escala (ej: "1 escala en Lima"). En el campo "ruta" especifica siempre las ciudades de escala reales (ej: "SCL → BOG → NRT").
-- ALOJAMIENTO: Recomienda SOLO hoteles/alojamientos con nombre REAL y verificable. Prioriza cadenas conocidas (Hilton, Marriott, NH, Ibis, Radisson, Hyatt, etc.) o boutiques con alta presencia online. NUNCA inventes nombres de hoteles.
+- ALOJAMIENTO: Recomienda SOLO hoteles/alojamientos con nombre REAL y verificable. Prioriza cadenas conocidas (Hilton, Marriott, NH, Ibis, Radisson, Hyatt, etc.) o boutiques con alta presencia online. NUNCA inventes nombres de hoteles. SIEMPRE incluye EXACTAMENTE 3 opciones por ciudad: Económico, Confort y Premium. Nunca menos de 3.
 - RESTAURANTES: incluye exactamente 3 restaurantes por cada ciudad/destino visitado, agrupados por ciudad.
-- INTERESES: Las actividades de cada dia (manana, tarde, noche > actividad) DEBEN reflejar los intereses del viajero incluidos en los datos del cliente. Adapta CADA dia segun sus gustos: aventura/deporte -> excursiones activas, surf, senderismo, escalada, kayak; gastronomia -> mercados locales, degustaciones, clases de cocina, bares de autor; cultura -> museos, barrios historicos, arte urbano, espectaculos; naturaleza -> parques nacionales, wildlife, ecoturismo; playa/relax -> playas, snorkel, spas, atardeceres. NO propongas actividades genericas que contradigan sus intereses.
 
 GENERA JSON puro (sin markdown, sin \`\`\`):
 {
@@ -235,9 +235,8 @@ ${clienteCtx}
 
 REGLAS IMPORTANTES:
 - VUELOS: Usa tu conocimiento real de rutas aéreas. Incluye mínimo 3 aerolíneas distintas. SOLO pon escala="Directo" si existe un vuelo directo real en esa ruta específica. Si NO hay vuelo directo, nunca lo inventes — pon la mejor conexión con ciudad real de escala (ej: "1 escala en Lima"). En el campo "ruta" especifica siempre las ciudades de escala reales (ej: "SCL → BOG → NRT").
-- ALOJAMIENTO: Recomienda SOLO hoteles/alojamientos con nombre REAL y verificable. Prioriza cadenas conocidas (Hilton, Marriott, NH, Ibis, Radisson, Hyatt, etc.) o boutiques con alta presencia online. NUNCA inventes nombres de hoteles.
+- ALOJAMIENTO: Recomienda SOLO hoteles/alojamientos con nombre REAL y verificable. Prioriza cadenas conocidas (Hilton, Marriott, NH, Ibis, Radisson, Hyatt, etc.) o boutiques con alta presencia online. NUNCA inventes nombres de hoteles. SIEMPRE incluye EXACTAMENTE 3 opciones por ciudad: Económico, Confort y Premium. Nunca menos de 3.
 - RESTAURANTES: incluye exactamente 3 restaurantes por cada ciudad/destino visitado, agrupados por ciudad.
-- INTERESES: Las actividades de cada dia (manana, tarde, noche > actividad) DEBEN reflejar los intereses del viajero incluidos en los datos del cliente. Adapta CADA dia segun sus gustos: aventura/deporte -> excursiones activas, surf, senderismo, escalada, kayak; gastronomia -> mercados locales, degustaciones, clases de cocina, bares de autor; cultura -> museos, barrios historicos, arte urbano, espectaculos; naturaleza -> parques nacionales, wildlife, ecoturismo; playa/relax -> playas, snorkel, spas, atardeceres. NO propongas actividades genericas que contradigan sus intereses.
 - TRANSPORTE aeropuerto→centro: lista TODAS las opciones disponibles (Uber, Taxi, Metro, Bus express, Tren, etc.) con costo estimado y duración en el array opciones_aeropuerto_centro.
 
 GENERA JSON puro (sin markdown, sin \`\`\`):
@@ -346,17 +345,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
     "horario_comercial": "string",
     "horarios_comida": "string",
     "museos": "string"
-  },
-  "que_empacar": {
-    "clima_fechas": "string (temperatura min/max esperada en las fechas exactas del viaje, condiciones: lluvia/sol/nieve/humedad/viento — sé específico con rangos de temperatura en °C)",
-    "ropa": [
-      "string (ítem de ropa específico según clima y actividades: ej: 'Campera impermeable ligera para lluvia', 'Ropa cómoda para senderismo', 'Al menos 1 outfit formal si hay restaurantes con código de vestimenta')"
-    ],
-    "adaptador": "string (tipo de enchufe del destino: A, B, C, D, G, I, etc. — voltaje: 110V o 220V/230V — indica explícitamente si el viajero chileno necesita adaptador de enchufe y/o transformador de voltaje)",
-    "botiquin": [
-      "string (ítem esencial del botiquín para ESTE destino y actividades — sé específico: ej: 'Repelente DEET 30% contra mosquitos', 'Antihistamínico oral', 'Pastillas para el mareo en bus/bote si hay excursiones', 'Bloqueador solar SPF 50+ si hay playa o montaña')"
-    ],
-    "gadgets": "string (recomienda capacidad de power bank en mAh según duración de jornadas, si conviene llevar adaptador universal, y otros gadgets útiles para este viaje específico: ej cámara sumergible, bastones de trekking, etc.)"
   },
   "salud_seguridad": {
     "vacunas": "string",
@@ -554,11 +542,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
 
   </div>
 
-  ${!isPro ? `<div style="background:linear-gradient(135deg,#FF6332 0%,#C2185B 100%);border-radius:12px;padding:24px 20px;margin:0 0 24px;text-align:center;">
-    <p style="color:#fff;font-size:16px;font-weight:800;margin:0 0 8px;">&#x1F680; &iquest;Quer&eacute;s m&aacute;s detalle de tu viaje?</p>
-    <p style="color:rgba(255,255,255,0.9);font-size:13px;line-height:1.6;margin:0 0 16px;">Mejor&aacute; a Vivante Pro por solo <strong>$9 m&aacute;s</strong> y agreg&aacute; restaurantes recomendados, vida nocturna, tips de seguridad, eSIM, frases locales y presupuesto detallado d&iacute;a a d&iacute;a.</p>
-    <a href="mailto:vive.vivante.ch@gmail.com?subject=Quiero%20mejorar%20a%20Vivante%20Pro" style="display:inline-block;background:#fff;color:#FF6332;padding:10px 28px;border-radius:24px;font-weight:800;font-size:13px;text-decoration:none;">Mejorar a Pro por $9 &rarr;</a>
-  </div>` : ''}
   <div style="background:#FF6332;padding:32px;text-align:center;">
     <p style="color:#fff;font-size:22px;font-weight:800;margin:0 0 8px;">VIVANTE</p>
     <p style="color:rgba(255,255,255,0.9);font-size:14px;margin:0 0 16px;">
@@ -590,29 +573,6 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
         }),
       });
       if (!emailRes.ok) console.error('Resend error:', await emailRes.text());
-    }
-
-    // Brevo: agregar contacto a lista 'clientes_vivante' para automatizacion testimonial 48h
-    const brevoKey = process.env.BREVO_API_KEY;
-    if (brevoKey) {
-      try {
-        await fetch('https://api.brevo.com/v3/contacts', {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'content-type': 'application/json',
-            'api-key': brevoKey,
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            attributes: { FIRSTNAME: (formData.nombre || '').split(' ')[0] },
-            listIds: [4],
-            updateEnabled: true,
-          }),
-        });
-      } catch (e) {
-        console.error('Brevo error:', e.message);
-      }
     }
 
     return NextResponse.json({ itinerario, planId });
