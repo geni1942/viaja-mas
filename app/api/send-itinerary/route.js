@@ -69,18 +69,31 @@ Para fecha_salida y fecha_regreso: propón fechas REALES en formato YYYY-MM-DD, 
 Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto principal.`;
 
     // Plataformas según preferencia del cliente
+    // hotel → Eco=Airbnb, Mid=Booking.com, Prem=Booking.com
+    // airbnb → todo Airbnb | hostal → todo Hostelworld | bnb → todo Booking.com
     const alojPref = formData.alojamiento || 'hotel';
     const platEco  = alojPref === 'hostal'  ? 'Hostelworld'
                    : alojPref === 'airbnb'  ? 'Airbnb'
                    : alojPref === 'bnb'     ? 'Booking.com'
-                   : 'Booking.com';
+                   : 'Airbnb';         // hotel → Económico en Airbnb
     const platMid  = alojPref === 'hostal'  ? 'Hostelworld'
                    : alojPref === 'airbnb'  ? 'Airbnb'
                    : alojPref === 'bnb'     ? 'Booking.com'
-                   : 'Booking.com';
+                   : 'Booking.com';    // hotel → Confort en Booking.com
     const platPrem = alojPref === 'hostal'  ? 'Hostelworld'
                    : alojPref === 'airbnb'  ? 'Airbnb'
-                   : 'Airbnb';
+                   : alojPref === 'bnb'     ? 'Booking.com'
+                   : 'Booking.com';    // hotel → Premium en Booking.com
+    // Links de búsqueda según plataforma
+    const linkEco  = platEco  === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
+                   : platEco  === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
+                   : 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS';
+    const linkMid  = platMid  === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
+                   : platMid  === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
+                   : 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS';
+    const linkPrem = platPrem === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
+                   : platPrem === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
+                   : 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS';
 
     const alojamientoSchema = `
 "alojamiento": [
@@ -97,7 +110,7 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
         "cancelacion": "Gratuita",
         "highlights": ["string feature 1", "string feature 2"],
         "por_que": "string en voz VIVANTE cálida y directa",
-        "link": "URL de búsqueda: https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS"
+        "link": "URL de búsqueda: ${linkEco}"
       },
       {
         "plataforma": "${platMid}",
@@ -108,7 +121,7 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
         "cancelacion": "Gratuita",
         "highlights": ["string"],
         "por_que": "string",
-        "link": "URL"
+        "link": "URL de búsqueda: ${linkMid}"
       },
       {
         "plataforma": "${platPrem}",
@@ -119,7 +132,7 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
         "cancelacion": "string",
         "highlights": ["string"],
         "por_que": "string",
-        "link": "URL de búsqueda: https://www.airbnb.com/s/CIUDAD/homes"
+        "link": "URL de búsqueda: ${linkPrem}"
       }
     ]
   }
