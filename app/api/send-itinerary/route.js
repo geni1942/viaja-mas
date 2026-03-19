@@ -587,6 +587,46 @@ GENERA JSON puro (sin markdown, sin \`\`\`):
       if (!emailRes.ok) console.error('Resend error:', await emailRes.text());
     }
 
+    // ── Brevo: enviar email upsell Pro (solo para plan básico) ───────────────
+    if (!isPro) {
+      const brevoKey = process.env.BREVO_API_KEY;
+      if (brevoKey) {
+        // Construir URL del botón de upgrade con todos los datos del formulario
+        const upgradeParams = new URLSearchParams({
+          n:    formData.nombre || '',
+          e:    formData.email  || '',
+          dest: formData.destino || '',
+          orig: formData.origen  || '',
+          dias: String(formData.dias || ''),
+          pax:  String(formData.numViajeros || 1),
+          fs:   itinerario?.resumen?.fecha_salida  || '',
+          fr:   itinerario?.resumen?.fecha_regreso || '',
+          int:  Array.isArray(formData.intereses) ? formData.intereses.join(',') : (formData.intereses || ''),
+          pre:  String(formData.presupuesto || ''),
+          tv:   formData.tipoViaje   || '',
+          al:   formData.alojamiento || '',
+          rt:   String(formData.ritmo || ''),
+        });
+        const upgradeUrl = `https://vivevivante.com/upgrade-pro?${upgradeParams.toString()}`;
+
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'api-key': brevoKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            templateId: 1,
+            to: [{ email: formData.email, name: formData.nombre }],
+            params: {
+              FIRSTNAME:   formData.nombre,
+              UPGRADE_URL: upgradeUrl,
+            },
+          }),
+        }).catch(e => console.error('Brevo upsell error:', e));
+      }
+    }
+
     return NextResponse.json({ itinerario, planId });
   } catch (error) {
     console.error('send-itinerary error:', error);
