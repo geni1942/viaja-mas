@@ -126,8 +126,9 @@ function buildAirlineUrl(aerolinea, origenIata, destinoIata, fechaSalida, fechaR
 
   // ── Europeas ──────────────────────────────────────────────────────────────
   if (a.includes('iberia') && !a.includes('express')) {
-    // URL actualizada — formato con parámetros en CamelCase que usa el motor de Iberia
-    return `https://www.iberia.com/es/vuelos/?Adults=${n}&Cabin=Y&Origin=${o}&Destination=${d}&DepartureDate=${dep}&ReturnDate=${ret}&TripType=R`;
+    // Iberia usa su motor "Onda" — parámetros en minúsculas, fecha DD/MM/YYYY
+    const fmt = (dateStr) => { if (!dateStr) return ''; const [y,m,d2] = dateStr.split('-'); return `${d2}%2F${m}%2F${y}`; };
+    return `https://www.iberia.com/es/vuelos/?adults=${n}&children=0&infants=0&origin=${o}&destination=${d}&departure=${fmt(dep)}${ret ? `&return=${fmt(ret)}&triptype=R` : '&triptype=OW'}`;
   }
   if (a.includes('iberia express') || (a.includes('iberia') && a.includes('express'))) {
     return `https://booking.iberiaexpress.com/es/vuelos?adults=${n}&origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}`;
@@ -295,12 +296,24 @@ function ItinerarioContent() {
     try { data = JSON.parse(localStorage.getItem('vivante_formData') || 'null'); } catch {}
     if (!data) { setEstado('error'); return; }
     setFormData(data);
+    // Basic→Pro continuity: si es upgrade Pro, pasar el itinerario básico como base
+    let basicItinerary = null;
+    if (plan === 'pro') {
+      try { basicItinerary = JSON.parse(localStorage.getItem('vivante_basic_itinerary') || 'null'); } catch {}
+    }
     fetch('/api/send-itinerary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ formData: data, planId: plan }),
+      body: JSON.stringify({ formData: data, planId: plan, basicItinerary }),
     }).then(r => r.json()).then(res => {
-      if (res.itinerario) { setItinerario(res.itinerario); setEstado('listo'); }
+      if (res.itinerario) {
+        setItinerario(res.itinerario);
+        setEstado('listo');
+        // Guardar itinerario básico para futura continuidad en upgrade Pro
+        if (plan !== 'pro') {
+          try { localStorage.setItem('vivante_basic_itinerary', JSON.stringify(res.itinerario)); } catch {}
+        }
+      }
       else setEstado('error');
     }).catch(() => setEstado('error'));
   }, [searchParams]);
@@ -373,11 +386,21 @@ function ItinerarioContent() {
         .tab-btn { border: none; background: none; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: Inter, sans-serif; }
         /* ── PRINT: mostrar TODAS las secciones ── */
         @media print {
-          .vivante-section  { display: block !important; margin-bottom: 24px !important; page-break-inside: avoid; }
+          /* Quitar URL/fecha del header y footer del navegador */
+          @page {
+            size: A4 portrait;
+            margin: 12mm 10mm 12mm 10mm;
+          }
+          /* Primera sección: sin page-break antes (evita página en blanco inicial) */
+          .print-break:first-of-type { page-break-before: auto !important; break-before: auto !important; }
+          /* Resto de secciones: page-break entre ellas */
+          .print-break ~ .print-break { page-break-before: always !important; break-before: page !important; }
+          /* Evitar cortes dentro de secciones y dentro de tarjetas de días */
+          .vivante-section  { display: block !important; margin-bottom: 16px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+          .day-card         { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 14px !important; }
           .no-print         { display: none !important; }
-          .print-break      { page-break-before: always; }
           *                 { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          body              { background: #FCF8F4 !important; }
+          body              { background: #FCF8F4 !important; margin: 0 !important; padding: 0 !important; }
         }
       `}</style>
 
@@ -498,7 +521,7 @@ function ItinerarioContent() {
         {/* ══ DÍA A DÍA ═══════════════════════════════════════════════════════ */}
         <div className="vivante-section print-break" style={{ display: show('dias') ? 'block' : 'none' }}>
           {(itinerario?.dias || []).map((dia, di) => (
-            <div key={di} style={{ background: '#fff', borderRadius: 16, marginBottom: 18, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', borderLeft: `5px solid ${C.coral}` }}>
+            <div key={di} className="day-card" style={{ background: '#fff', borderRadius: 16, marginBottom: 18, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', borderLeft: `5px solid ${C.coral}` }}>
               <div style={{ background: C.coral, padding: '13px 18px' }}>
                 <span style={{ color: '#fff', fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16 }}>
                   Día {dia.numero}: {dia.titulo}
@@ -723,8 +746,9 @@ function ItinerarioContent() {
                       const qPlus = rawQ.replace(/\s+/g, '+');
                       // GYG: SIEMPRE búsqueda con + encoding (nunca links del AI — son IDs inventados)
                       const gygUrl = `https://www.getyourguide.com/s/?q=${qPlus}&partner_id=UCJJVUD`;
-                      // Civitatis: búsqueda en su catálogo
-                      const civitatisUrl = `https://www.civitatis.com/es/buscar/?q=${encodeURIComponent(rawQ)}`;
+                      // Civitatis: página de ciudad con actividad como búsqueda → ej: civitatis.com/es/barcelona/?q=Sagrada+Familia
+                      const civiSlug = destRaw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                      const civitatisUrl = `https://www.civitatis.com/es/${civiSlug}/?q=${encodeURIComponent(exp.nombre || rawQ)}`;
                       // plataformas_disponibles: undefined → mostrar ambas (backward compat); [] → ninguna; ["X"] → solo X
                       const plats = exp.plataformas_disponibles;
                       const showGyg       = !plats || plats.includes('GetYourGuide');
