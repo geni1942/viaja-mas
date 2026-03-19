@@ -26,12 +26,12 @@ export default function Home() {
   }, []);
 
   const destinos = [
-    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres del paine, Chile.jpg', precio: 'Desde $400.000 CLP', tag: '🇨🇱 Local' },
-    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini, Grecia.jpg', precio: 'Desde $1.200 USD', tag: '🔥 Popular' },
-    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali, Indonesia.jpg', precio: 'Desde $1.500 USD', tag: '✨ Trending' },
-    { nombre: 'Machu Picchu', pais: 'Perú', imagen: '/images/Machu Picchu, Peru.jpg', precio: 'Desde $600 USD', tag: '🎒 Aventura' },
-    { nombre: 'Cartagena', pais: 'Colombia', imagen: '/images/cartagena.jpg', precio: 'Desde $500 USD', tag: '🏖️ Playa' },
-    { nombre: 'Barcelona', pais: 'España', imagen: '/images/Barcelona, España.jpg', precio: 'Desde $1.100 USD', tag: '🎨 Cultura' },
+    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres del paine, Chile.jpg', tag: '🇨🇱 Local' },
+    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini, Grecia.jpg', tag: '🔥 Popular' },
+    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali, Indonesia.jpg', tag: '✨ Trending' },
+    { nombre: 'Machu Picchu', pais: 'Perú', imagen: '/images/Machu Picchu, Peru.jpg', tag: '🎒 Aventura' },
+    { nombre: 'Cartagena', pais: 'Colombia', imagen: '/images/cartagena.jpg', tag: '🏖️ Playa' },
+    { nombre: 'Barcelona', pais: 'España', imagen: '/images/Barcelona, España.jpg', tag: '🎨 Cultura' },
   ];
 
   return (
@@ -230,8 +230,7 @@ export default function Home() {
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <p className="text-white/70 text-sm">{destino.pais}</p>
                   <h3 className="text-white text-2xl font-bold mb-2">{destino.nombre}</h3>
-                  <div className="flex items-center justify-between">
-                    <p className="text-orange-400 font-semibold">{destino.precio}</p>
+                  <div className="flex items-center justify-end">
                     <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight className="w-5 h-5 text-white" />
                     </div>
