@@ -763,6 +763,9 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
               >
                 ← Volver
               </button>
+              <p className="text-center text-xs text-gray-400 pt-1">
+                ¿No quedaste conforme? <a href="mailto:vive.vivante.ch@gmail.com" className="underline hover:text-gray-500">Escríbenos</a> y lo solucionamos.
+              </p>
             </div>
           </div>
         </div>
@@ -1099,7 +1102,21 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Tu email</label>
-                  <input type="email" placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none" />
+                  <input type="email" placeholder="tu@email.com" value={formData.email} onChange={(e) => {
+                    const newEmail = e.target.value;
+                    setFormData({ ...formData, email: newEmail });
+                    // Guardar lead inmediatamente para remarketing si abandona
+                    if (newEmail.includes('@') && newEmail.includes('.')) {
+                      try {
+                        localStorage.setItem('vivante_lead', JSON.stringify({
+                          email: newEmail,
+                          nombre: formData.nombre,
+                          destino: formData.destino,
+                          ts: Date.now(),
+                        }));
+                      } catch (_) {}
+                    }
+                  }} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none" />
                 </div>
                 {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
               </div>
