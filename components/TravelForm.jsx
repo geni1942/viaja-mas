@@ -526,9 +526,8 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
     switch (step) {
       case 1: return formData.tieneDestino !== null && (formData.tieneDestino === false || formData.destino.trim());
       case 2: return formData.origen.trim() && formData.presupuesto >= 500 && formData.dias >= 3;
-      case 3: return formData.tipoViaje !== '';
+      case 3: return formData.nombre.trim() && formData.email.includes('@') && formData.tipoViaje !== '';
       case 4: return formData.intereses.length > 0 && formData.alojamiento !== '';
-      case 5: return formData.nombre.trim() && formData.email.includes('@');
       default: return true;
     }
   };
@@ -870,7 +869,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
         <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 z-10">✕</button>
         <div className="p-6 sm:p-8">
           <div className="flex gap-2 mb-8">
-            {[1,2,3,4,5].map((s) => (
+            {[1,2,3,4].map((s) => (
               <div key={s} className={`h-2 flex-1 rounded-full transition-colors ${step >= s ? 'bg-gradient-to-r from-orange-500 to-pink-500' : 'bg-gray-200'}`} />
             ))}
           </div>
@@ -999,15 +998,54 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
             </div>
           )}
 
-          {/* PASO 3: Viajeros */}
+          {/* PASO 3: Contacto + Viajeros */}
           {step === 3 && (
             <div className="fade-in">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><Users className="w-8 h-8 text-orange-500" /></div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">¿Quiénes viajan?</h2>
-                <p className="text-gray-500">Para personalizar la experiencia</p>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Cuéntanos sobre vos</h2>
+                <p className="text-gray-500">Personalizamos el itinerario a tu medida</p>
               </div>
               <div className="space-y-6">
+                {/* Nombre y Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">¿Cómo te llamas?</label>
+                  <input
+                    type="text"
+                    placeholder="Tu nombre"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tu email</label>
+                  <input
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={formData.email}
+                    onChange={(e) => {
+                      const newEmail = e.target.value;
+                      setFormData({ ...formData, email: newEmail });
+                      // Guardar lead para remarketing (localStorage + Brevo)
+                      if (newEmail.includes('@') && newEmail.includes('.')) {
+                        try {
+                          const lead = { email: newEmail, nombre: formData.nombre, destino: formData.destino, ts: Date.now() };
+                          localStorage.setItem('vivante_lead', JSON.stringify(lead));
+                          fetch('/api/lead', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: newEmail, nombre: formData.nombre, destino: formData.destino }),
+                          }).catch(() => {});
+                        } catch (_) {}
+                      }
+                    }}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-3">¿Quiénes viajan?</p>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   {[{ id: 'solo', label: 'Solo/a', emoji: '🧍' },{ id: 'pareja', label: 'Pareja', emoji: '💑' },{ id: 'familia', label: 'Familia', emoji: '👨‍👩‍👧‍👦' },{ id: 'amigos', label: 'Amigos/as', emoji: '👯' }].map((tipo) => (
                     <button key={tipo.id} onClick={() => setFormData({ ...formData, tipoViaje: tipo.id, numViajeros: tipo.id === 'solo' ? 1 : tipo.id === 'pareja' ? 2 : formData.numViajeros })} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${formData.tipoViaje === tipo.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'}`}>
@@ -1087,42 +1125,9 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
             </div>
           )}
 
-          {/* PASO 5: Contacto */}
-          {step === 5 && (
-            <div className="fade-in">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><span className="text-3xl">📧</span></div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">¡Último paso!</h2>
-                <p className="text-gray-500">¿Dónde te enviamos los detalles?</p>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">¿Cómo te llamas?</label>
-                  <input type="text" placeholder="Tu nombre" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tu email</label>
-                  <input type="email" placeholder="tu@email.com" value={formData.email} onChange={(e) => {
-                    const newEmail = e.target.value;
-                    setFormData({ ...formData, email: newEmail });
-                    // Guardar lead para remarketing (localStorage + Brevo)
-                    if (newEmail.includes('@') && newEmail.includes('.')) {
-                      try {
-                        const lead = { email: newEmail, nombre: formData.nombre, destino: formData.destino, ts: Date.now() };
-                        localStorage.setItem('vivante_lead', JSON.stringify(lead));
-                        // POST al servidor → Brevo Contacts (fire-and-forget)
-                        fetch('/api/lead', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email: newEmail, nombre: formData.nombre, destino: formData.destino }),
-                        }).catch(() => {});
-                      } catch (_) {}
-                    }
-                  }} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none" />
-                </div>
-                {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
-              </div>
-            </div>
+          {/* PASO 4 muestra error si existe */}
+          {step === 4 && error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mt-4">{error}</div>
           )}
 
           {/* Navegación */}
@@ -1132,13 +1137,13 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 <ChevronLeft className="w-5 h-5" /> Atrás
               </button>
             )}
-            {step < 5 ? (
+            {step < 4 ? (
               <button onClick={() => setStep(step + 1)} disabled={!canProceed()} className={`flex-1 py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all ${canProceed() ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-lg' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
                 Continuar <ChevronRight className="w-5 h-5" />
               </button>
             ) : (
               <button onClick={handleStep5Submit} disabled={!canProceed() || isSubmitting || isLoadingOptions} className={`flex-1 py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all ${canProceed() && !isSubmitting && !isLoadingOptions ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-lg' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
-                {isSubmitting || isLoadingOptions ? <><Loader2 className="w-5 h-5 animate-spin" /> {isLoadingOptions ? 'Buscando destinos...' : 'Enviando...'}</> : <>Continuar <ChevronRight className="w-5 h-5" /></>}
+                {isSubmitting || isLoadingOptions ? <><Loader2 className="w-5 h-5 animate-spin" /> {isLoadingOptions ? 'Buscando destinos...' : 'Enviando...'}</> : <>Ver mi plan <ChevronRight className="w-5 h-5" /></>}
               </button>
             )}
           </div>
