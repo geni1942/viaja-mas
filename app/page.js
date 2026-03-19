@@ -120,20 +120,18 @@ export default function Home() {
       {/* Stats Section */}
       <section className="bg-gradient-to-r from-orange-500 to-pink-500 py-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-3 gap-8 text-center text-white">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center text-white">
             <div>
-              <div className="text-3xl sm:text-4xl font-bold">156+</div>
-              <div className="text-white/80 text-sm sm:text-base">Destinos disponibles</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold">40+</div>
+              <div className="text-white/80 text-xs sm:text-sm md:text-base mt-1">horas ahorradas por viaje</div>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-bold">50+</div>
-              <div className="text-white/80 text-sm sm:text-base">Países cubiertos</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold">$10</div>
+              <div className="text-white/80 text-xs sm:text-sm md:text-base mt-1">USD tu itinerario completo</div>
             </div>
             <div>
-              <div className="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-bold">
-                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
-              </div>
-              <div className="text-white/80 text-sm sm:text-base">Itinerarios personalizados</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold">100%</div>
+              <div className="text-white/80 text-xs sm:text-sm md:text-base mt-1">personalizado a tu viaje</div>
             </div>
           </div>
         </div>
@@ -183,6 +181,130 @@ export default function Home() {
               Empezar ahora
               <ArrowRight className="w-5 h-5" />
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Vista previa del itinerario ───────────────────────────────────── */}
+      <section className="py-16 sm:py-24 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="inline-block bg-orange-100 text-orange-600 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+              Así se ve
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Tu itinerario, día a día
+            </h2>
+            <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
+              Cada actividad, restaurante y link listo para reservar con un clic
+            </p>
+          </div>
+
+          {/* Tabs de días */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
+            <span className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+              Día 1 ✓
+            </span>
+            {['Día 2','Día 3','Día 4'].map((d) => (
+              <span key={d} className="flex-shrink-0 bg-gray-100 text-gray-400 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1">
+                🔒 {d}
+              </span>
+            ))}
+            <span className="flex-shrink-0 bg-gray-100 text-gray-300 px-4 py-2 rounded-full text-sm font-semibold">
+              +3 más…
+            </span>
+          </div>
+
+          {/* Día 1 — visible */}
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-3">
+            <div className="bg-gradient-to-r from-orange-500 to-pink-500 px-5 sm:px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="bg-white/25 text-white text-sm font-bold px-3 py-1 rounded-full">Día 1</span>
+                  <div>
+                    <p className="text-white font-semibold text-sm sm:text-base">Llegada a Tokio · Asakusa</p>
+                    <p className="text-white/70 text-xs">Tokio, Japón 🇯🇵</p>
+                  </div>
+                </div>
+                <span className="hidden sm:block text-white/70 text-xs bg-white/10 px-3 py-1 rounded-full">
+                  Vista previa gratuita
+                </span>
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-50">
+              {[
+                { hora:'09:00', emoji:'🏛️', lugar:'Templo Senso-ji', tag:'Cultura',      link:'Ver en Get Your Guide →', desc:'El templo más visitado de Japón. Llegá temprano para vivirlo antes de las multitudes — el ambiente es otro.' },
+                { hora:'12:30', emoji:'🍜', lugar:'Tsukiji Outer Market', tag:'Gastronomía', link:null,                       desc:'Sushi fresco, tamagoyaki y ramen auténtico desde $10 USD. Pedile recomendación al vendedor de turno.' },
+                { hora:'15:00', emoji:'🌆', lugar:'Shibuya Crossing + Harajuku', tag:'Imperdible',  link:'Tour guiado →',              desc:'El cruce más transitado del mundo. Subí al Starbucks frente al semáforo para la foto perfecta. Gratis.' },
+                { hora:'19:30', emoji:'🍶', lugar:'Cena en Omoide Yokocho', tag:'Local',        link:null,                       desc:'"Memory Lane": callejón de 1948 con tabernas de yakitori y sake. Una de las experiencias más auténticas de Tokio.' },
+              ].map((item, i) => (
+                <div key={i} className="px-5 sm:px-6 py-3 sm:py-4 flex gap-3 sm:gap-4 hover:bg-orange-50/30 transition-colors">
+                  <div className="text-xs text-gray-400 font-mono w-10 flex-shrink-0 pt-1">{item.hora}</div>
+                  <div className="text-lg sm:text-xl flex-shrink-0 mt-0.5">{item.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                      <p className="font-semibold text-gray-800 text-sm sm:text-base">{item.lugar}</p>
+                      <span className="text-xs bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full border border-orange-100">{item.tag}</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                    {item.link && (
+                      <p className="text-xs text-orange-500 font-medium mt-1 hover:underline cursor-pointer">{item.link}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-5 sm:px-6 py-3 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center gap-2 sm:gap-4">
+              <span className="text-xs text-gray-500">💰 ~$45 USD/persona</span>
+              <span className="hidden sm:block text-xs text-gray-300">·</span>
+              <span className="text-xs text-gray-500">🚇 Suica card recomendada</span>
+              <span className="hidden sm:block text-xs text-gray-300">·</span>
+              <span className="text-xs text-gray-500">🏨 Hotel en Shinjuku (incluido)</span>
+            </div>
+          </div>
+
+          {/* Día 2 — bloqueado */}
+          <div className="relative mb-8">
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden blur-[3px] select-none pointer-events-none">
+              <div className="bg-gray-100 px-5 sm:px-6 py-4 flex items-center gap-3">
+                <span className="bg-gray-200 text-gray-400 text-sm font-bold px-3 py-1 rounded-full">Día 2</span>
+                <p className="text-gray-400 font-semibold text-sm">Kioto — Templos y tradición</p>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {[1,2,3].map((_,i) => (
+                  <div key={i} className="px-5 sm:px-6 py-4 flex gap-4">
+                    <div className="w-10 h-3 bg-gray-100 rounded mt-1 flex-shrink-0"></div>
+                    <div className="w-6 h-6 bg-gray-100 rounded-full flex-shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-gray-100 rounded w-36"></div>
+                      <div className="h-3 bg-gray-50 rounded w-full"></div>
+                      <div className="h-3 bg-gray-50 rounded w-3/4"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white/98 border border-orange-100 rounded-2xl px-6 sm:px-10 py-4 sm:py-5 text-center shadow-xl">
+                <span className="text-2xl sm:text-3xl mb-2 block">🔒</span>
+                <p className="text-gray-800 font-bold text-sm sm:text-base">Días 2 al 7 en tu itinerario</p>
+                <p className="text-gray-400 text-xs sm:text-sm mt-1">Kioto · Osaka · Hiroshima y más</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <button
+              onClick={() => setShowForm(true)}
+              className="group bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-8 sm:px-10 py-4 rounded-2xl text-base sm:text-lg font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-orange-500/25 inline-flex items-center gap-3"
+            >
+              Crear mi itinerario completo
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <p className="text-gray-400 text-sm mt-3">Desde $10 USD · Tu plan listo en minutos</p>
           </div>
         </div>
       </section>
