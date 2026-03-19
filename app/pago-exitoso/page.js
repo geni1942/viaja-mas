@@ -56,89 +56,163 @@ function alojamientoLink(op, destino, checkin, checkout, adults) {
   return `https://www.booking.com/searchresults.html?${p}`;
 }
 
-// ─── Airline deep-links ───────────────────────────────────────────────────────
+// ─── Airline deep-links — DIRECTO a la aerolínea, nunca a agregadores ────────
 function buildAirlineUrl(aerolinea, origenIata, destinoIata, fechaSalida, fechaRegreso, numViajeros) {
   if (!origenIata || !destinoIata || !fechaSalida) return null;
-  const s = fechaSalida.replace(/-/g, '');
-  const r = fechaRegreso ? fechaRegreso.replace(/-/g, '') : '';
-  const n = numViajeros || 1;
-  const a = (aerolinea || '').toLowerCase();
+  const s   = fechaSalida.replace(/-/g, '');                    // YYYYMMDD
+  const r   = fechaRegreso ? fechaRegreso.replace(/-/g, '') : '';
+  const n   = numViajeros || 1;
+  const a   = (aerolinea || '').toLowerCase();
+  const o   = origenIata;
+  const d   = destinoIata;
+  const dep = fechaSalida;          // YYYY-MM-DD
+  const ret = fechaRegreso || '';
 
-  // Kayak pre-filled (con o sin filtro de aerolínea)
-  const kayak = (code) => {
-    const base = `https://www.kayak.com/flights/${origenIata}-${destinoIata}/${fechaSalida}${fechaRegreso ? '/'+fechaRegreso : ''}/${n}adults`;
-    return code ? `${base}?fs=airlines=${code}` : base;
-  };
-
-  // ── Aerolíneas latinoamericanas (deep-link directo, funciona bien) ──────────
+  // ── Latinoamericanas ──────────────────────────────────────────────────────
   if (a.includes('latam')) {
-    let url = `https://www.latam.com/es_cl/apps/personas/booking?fecha1_outbound=${s}&from=${origenIata}&to=${destinoIata}&nro_adu=${n}&cabina=Y&openDatePicker=false`;
+    let url = `https://www.latam.com/es_cl/apps/personas/booking?fecha1_outbound=${s}&from=${o}&to=${d}&nro_adu=${n}&cabina=Y&openDatePicker=false`;
     if (r) url += `&fecha1_inbound=${r}`;
     return url;
   }
   if (a.includes('jetsmart')) {
-    return `https://book.jetsmart.com/S7/pasajeros?o1=${origenIata}&d1=${destinoIata}&dp1=${fechaSalida}&r=${fechaRegreso || ''}&pc=0&ac=${n}&cc=0&bc=0&mon=true&culture=es-CL`;
+    return `https://book.jetsmart.com/S7/pasajeros?o1=${o}&d1=${d}&dp1=${dep}&r=${ret}&pc=0&ac=${n}&cc=0&bc=0&mon=true&culture=es-CL`;
   }
   if (a.includes('sky') && !a.includes('scanner')) {
-    return `https://www.skyairline.com/es-cl/vuelos?from=${origenIata}&to=${destinoIata}&departure=${s}&adults=${n}`;
+    return `https://www.skyairline.com/es-cl/vuelos?from=${o}&to=${d}&departure=${s}&adults=${n}`;
   }
   if (a.includes('avianca')) {
-    return `https://www.avianca.com/es-cl/vuelos/?origin=${origenIata}&destination=${destinoIata}&departureDate=${fechaSalida}&returnDate=${fechaRegreso || ''}&adults=${n}`;
+    return `https://www.avianca.com/es-cl/vuelos/?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
   }
   if (a.includes('copa')) {
-    return `https://www.copaair.com/es-gs/comprar/buscar-vuelos/?origin=${origenIata}&destination=${destinoIata}&departure=${fechaSalida}&return=${fechaRegreso || ''}&adult=${n}&cabin=Y`;
+    return `https://www.copaair.com/es-gs/comprar/buscar-vuelos/?origin=${o}&destination=${d}&departure=${dep}&return=${ret}&adult=${n}&cabin=Y`;
   }
   if (a.includes('aerolineas') || a.includes('aerolíneas') || a.includes('argentinas')) {
-    return `https://www.aerolineas.com.ar/es-ar/vuelos?origin=${origenIata}&destination=${destinoIata}&departure=${fechaSalida}&return=${fechaRegreso || ''}&adults=${n}`;
+    return `https://www.aerolineas.com.ar/es-ar/vuelos?origin=${o}&destination=${d}&departure=${dep}&return=${ret}&adults=${n}`;
   }
-  if (a.includes('aeromexico') || a.includes('aeroméxico')) return kayak('AM');
-  if (a.includes('gol'))   return kayak('G3');
-  if (a.includes('azul'))  return kayak('AD');
-  if (a.includes('tam'))   return kayak('LA'); // TAM → LATAM
+  if (a.includes('aeromexico') || a.includes('aeroméxico')) {
+    return `https://aeromexico.com/en-us/flight-booking?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}&triptype=RT`;
+  }
+  if (a.includes('gol')) {
+    return `https://www.voegol.com.br/en/reservations/?searchType=RT&AirportIATACode=${o}&DestinationAirportIATACode=${d}&InitialFlight=${s}&ReturnFlight=${r}&NumPassengersAdult=${n}`;
+  }
+  if (a.includes('azul')) {
+    return `https://www.voeazul.com.br/en/flights/?from=${o}&to=${d}&date=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('tam') && !a.includes('latam')) {
+    let url = `https://www.latam.com/pt_br/apps/personas/booking?fecha1_outbound=${s}&from=${o}&to=${d}&nro_adu=${n}&cabina=Y&openDatePicker=false`;
+    if (r) url += `&fecha1_inbound=${r}`;
+    return url;
+  }
 
-  // ── Europeas / americanas: Iberia y Turkish con deep-link propio ──────────
+  // ── Norteamericanas ───────────────────────────────────────────────────────
+  if (a.includes('american')) {
+    return `https://www.aa.com/booking/search?requestType=MASM&searchType=R&passengers=${n}&origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&isFlexibleDate=false`;
+  }
+  if (a.includes('united')) {
+    return `https://www.united.com/en/us/flights/search#f=${o}&t=${d}&d=${dep}&r=${ret}&tt=2&px=${n}`;
+  }
+  if (a.includes('delta')) {
+    return `https://www.delta.com/us/en/flight-search/book-a-flight#origin=${o}&departure=${dep}&destination=${d}&return=${ret}&adults=${n}&tripType=roundtrip`;
+  }
+  if (a.includes('air canada')) {
+    return `https://www.aircanada.com/en-ca/book-trip/flight/search#origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('westjet')) {
+    return `https://www.westjet.com/en-ca/book-trip/flight/search?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+
+  // ── Europeas ──────────────────────────────────────────────────────────────
   if (a.includes('iberia')) {
-    return `https://www.iberia.com/es/vuelos/?from=${origenIata}&to=${destinoIata}&departureDate=${fechaSalida}&returnDate=${fechaRegreso || ''}&adults=${n}`;
+    return `https://www.iberia.com/es/vuelos/?from=${o}&to=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
   }
   if (a.includes('turkish') || a.includes('thy')) {
-    return `https://www.turkishairlines.com/en-int/flights/find-flights/?fromPort=${origenIata}&toPort=${destinoIata}&departureDate=${fechaSalida}&returnDate=${fechaRegreso || ''}&passengerCount=${n}`;
+    return `https://www.turkishairlines.com/en-int/flights/find-flights/?fromPort=${o}&toPort=${d}&departureDate=${dep}&returnDate=${ret}&passengerCount=${n}`;
+  }
+  if (a.includes('air france') || a.includes('airfrance')) {
+    return `https://www.airfrance.com/booking/offers?departureCityCode=${o}&arrivalCityCode=${d}&departureDate=${dep}&returnDate=${ret}&adultNumber=${n}&tripType=ROUND_TRIP`;
+  }
+  if (a.includes('klm')) {
+    return `https://www.klm.com/search/flights?lang=en&flightType=RT&origin=${o}&destination=${d}&outboundDate=${dep}&inboundDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('lufthansa')) {
+    return `https://www.lufthansa.com/de/en/flight-search?adults=${n}&origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}`;
+  }
+  if (a.includes('swiss')) {
+    return `https://www.swiss.com/de/en/book/flights?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('austrian')) {
+    return `https://www.austrian.com/de/en/flight-search?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('british') || (a.includes('ba') && a.length < 6)) {
+    return `https://www.britishairways.com/travel/book/public/en_gb?from=${o}&to=${d}&depart=${dep}&return=${ret}&adult=${n}&cabin=M`;
+  }
+  if (a.includes('tap') || (a.includes('portugal') && !a.includes('tap'))) {
+    return `https://www.flytap.com/en-us/book-trip/search?outboundDate=${dep}&inboundDate=${ret}&origin=${o}&destination=${d}&adults=${n}&tripType=RT`;
+  }
+  if (a.includes('norwegian')) {
+    return `https://www.flynorwegian.com/en/flights/?from=${o}&to=${d}&dep=${dep}&ret=${ret}&adults=${n}`;
+  }
+  if (a.includes('easyjet')) {
+    return `https://www.easyjet.com/en/cheap-flights?from=${o}&to=${d}&dep=${dep}`;
+  }
+  if (a.includes('ryanair')) {
+    return `https://www.ryanair.com/us/en/trip/flights/search?adults=${n}&dateOut=${dep}&dateIn=${ret}&isReturn=true&originIata=${o}&destinationIata=${d}`;
+  }
+  if (a.includes('finnair')) {
+    return `https://www.finnair.com/en/book/flights?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('ita airways') || a.includes('ita air')) {
+    return `https://www.ita-airways.com/en_us/flights.html?from=${o}&to=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
   }
 
-  // ── Resto: Kayak con filtro de aerolínea (siempre funciona, muestra esa aerolínea) ──
-  if (a.includes('american'))                                        return kayak('AA');
-  if (a.includes('united'))                                          return kayak('UA');
-  if (a.includes('delta'))                                           return kayak('DL');
-  if (a.includes('air france') || a.includes('airfrance'))          return kayak('AF');
-  if (a.includes('klm'))                                             return kayak('KL');
-  if (a.includes('lufthansa'))                                       return kayak('LH');
-  if (a.includes('qatar'))                                           return kayak('QR');
-  if (a.includes('emirates'))                                        return kayak('EK');
-  if (a.includes('british') || (a.includes('ba') && a.length < 6))  return kayak('BA');
-  if (a.includes('ethiopian'))                                       return kayak('ET');
-  if (a.includes('japan airlines') || a.includes('jal'))            return kayak('JL');
-  if (a.includes('all nippon') || /\bana\b/.test(a))                return kayak('NH');
-  if (a.includes('singapore'))                                       return kayak('SQ');
-  if (a.includes('cathay'))                                          return kayak('CX');
-  if (a.includes('korean air'))                                      return kayak('KE');
-  if (a.includes('asiana'))                                          return kayak('OZ');
-  if (a.includes('thai'))                                            return kayak('TG');
-  if (a.includes('malaysia'))                                        return kayak('MH');
-  if (a.includes('air canada'))                                      return kayak('AC');
-  if (a.includes('air new zealand'))                                 return kayak('NZ');
-  if (a.includes('tap') || a.includes('portugal'))                   return kayak('TP');
-  if (a.includes('swiss'))                                           return kayak('LX');
-  if (a.includes('austrian'))                                        return kayak('OS');
-  if (a.includes('norwegian'))                                       return kayak('DY');
-  if (a.includes('easyjet'))                                         return kayak('U2');
-  if (a.includes('ryanair'))                                         return kayak('FR');
-  if (a.includes('finnair'))                                         return kayak('AY');
-  if (a.includes('ita airways') || a.includes('ita air'))            return kayak('AZ');
-  if (a.includes('westjet'))                                         return kayak('WS');
-  if (a.includes('eva air') || a.includes('eva'))                    return kayak('BR');
-  if (a.includes('china airlines'))                                  return kayak('CI');
+  // ── Medio Oriente / África ────────────────────────────────────────────────
+  if (a.includes('qatar')) {
+    return `https://www.qatarairways.com/en-us/homepage.html?origin=${o}&destination=${d}&triptype=R&outboundDate=${dep}&inboundDate=${ret}&adult=${n}`;
+  }
+  if (a.includes('emirates')) {
+    return `https://www.emirates.com/en/english/book/flights/?type=return&adult=${n}&from=${o}&to=${d}&Departure=${dep}&return=${ret}`;
+  }
+  if (a.includes('ethiopian')) {
+    return `https://www.ethiopianairlines.com/en/book/results?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
 
-  // Fallback universal: Kayak sin filtro (siempre funciona, pre-llena origen/destino/fechas)
-  return kayak(null);
+  // ── Asiáticas ─────────────────────────────────────────────────────────────
+  if (a.includes('japan airlines') || a.includes('jal')) {
+    return `https://www.jal.co.jp/en/international/booking/search/?departureAirport=${o}&arrivalAirport=${d}&departureDate=${s}&returnDate=${r}&adults=${n}`;
+  }
+  if (a.includes('all nippon') || /\bana\b/.test(a)) {
+    return `https://www.ana.co.jp/en/us/plan-book/find-flights/?from=${o}&to=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('singapore')) {
+    return `https://www.singaporeair.com/en_UK/us/plan-travel/find-a-flight/?tripType=R&fromCode=${o}&toCode=${d}&departDate=${dep}&returnDate=${ret}&numAdults=${n}`;
+  }
+  if (a.includes('cathay')) {
+    return `https://www.cathaypacific.com/cx/en_US/book-a-trip/book-flight.html?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('korean air')) {
+    return `https://www.koreanair.com/content/koreanair/en_US/booking.html?from=${o}&to=${d}&date=${dep}&returnDate=${ret}&pax=${n}`;
+  }
+  if (a.includes('asiana')) {
+    return `https://www.flyasiana.com/C/en/main#/flight/search?origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('thai')) {
+    return `https://www.thaiairways.com/en_TH/book_fly/search_flight/search_result.page?from=${o}&to=${d}&departDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('malaysia')) {
+    return `https://www.malaysiaairlines.com/my/en/plan-your-trip/book.html?from=${o}&to=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('air new zealand')) {
+    return `https://www.airnewzealand.com/book?from=${o}&to=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('eva air') || (a.includes('eva') && !a.includes('evacuacion'))) {
+    return `https://www.evaair.com/en-global/book/flight-booking/?from=${o}&to=${d}&departureDate=${dep}&returnDate=${ret}&adults=${n}`;
+  }
+  if (a.includes('china airlines')) {
+    return `https://www.china-airlines.com/us/en/book/booking/flight-booking.html?from=${o}&to=${d}&departure=${dep}&return=${ret}&adult=${n}`;
+  }
+
+  // ── Fallback: sin botón (mejor que redirigir a un agregador) ─────────────
+  return null;
 }
 
 function formatDate(d) {
@@ -636,13 +710,11 @@ function ItinerarioContent() {
                   <tbody>
                     {(itinerario.experiencias || []).map((exp, ei) => {
                       const rawQ = ((exp.nombre || '') + ' ' + destRaw).trim();
-                      const q = encodeURIComponent(rawQ);
                       const qPlus = rawQ.replace(/\s+/g, '+');
-                      // GYG: usar link del AI solo si parece una URL real (no null/vacío/inventado)
-                      const gygLink = exp.link_gyg && exp.link_gyg.startsWith('https://www.getyourguide.com/') ? exp.link_gyg : null;
-                      const gygUrl = gygLink || `https://www.getyourguide.com/s/?q=${q}&partner_id=UCJJVUD`;
-                      // Viator: siempre usar búsqueda (los links del AI son poco confiables)
-                      const viatorUrl = `https://www.viator.com/search?q=${qPlus}`;
+                      // GYG: SIEMPRE búsqueda con + encoding (nunca links del AI — son IDs inventados)
+                      const gygUrl = `https://www.getyourguide.com/s/?q=${qPlus}&partner_id=UCJJVUD`;
+                      // Viator: parámetro text= (formato actual correcto de viator.com)
+                      const viatorUrl = `https://www.viator.com/search?text=${qPlus}`;
                       // plataformas_disponibles: undefined → mostrar ambas (backward compat); [] → ninguna; ["X"] → solo X
                       const plats = exp.plataformas_disponibles;
                       const showGyg    = !plats || plats.includes('GetYourGuide');
@@ -727,21 +799,32 @@ function ItinerarioContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {itinerario.seguro.map((s, i) => {
-                      const iatiUrl = s.nombre?.toLowerCase().includes('iati')
-                        ? 'https://www.iatiseguros.com/'
-                        : s.link;
-                      return (
-                        <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff' }}>
-                          <td style={{ padding: '10px 12px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{s.nombre}</td>
-                          <td style={{ padding: '10px 12px', color: '#555', fontSize: 13 }}>{s.cobertura}</td>
-                          <td style={{ padding: '10px 12px', color: C.coral, fontWeight: 700 }}>{s.precio_estimado}</td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <BtnLink href={iatiUrl} color={C.fucsia} small>COTIZAR</BtnLink>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {(() => {
+                      // Garantiza que IATI siempre aparezca (el AI a veces lo omite en Pro)
+                      const base = itinerario.seguro || [];
+                      const hasIati = base.some(s => s.nombre?.toLowerCase().includes('iati'));
+                      const lista = hasIati ? base : [...base, {
+                        nombre: 'IATI Seguros',
+                        cobertura: 'Cancelación, asistencia médica, equipaje y accidentes',
+                        precio_estimado: 'Desde $50 USD',
+                        link: 'https://www.iatiseguros.com/',
+                      }];
+                      return lista.map((s, i) => {
+                        const href = s.nombre?.toLowerCase().includes('iati')
+                          ? 'https://www.iatiseguros.com/'
+                          : s.link;
+                        return (
+                          <tr key={i} style={{ background: i % 2 === 0 ? C.bg0 : '#fff' }}>
+                            <td style={{ padding: '10px 12px', fontWeight: 700, color: C.carbon, fontSize: 14 }}>{s.nombre}</td>
+                            <td style={{ padding: '10px 12px', color: '#555', fontSize: 13 }}>{s.cobertura}</td>
+                            <td style={{ padding: '10px 12px', color: C.coral, fontWeight: 700 }}>{s.precio_estimado}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <BtnLink href={href} color={C.fucsia} small>COTIZAR</BtnLink>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
                   </tbody>
                 </table>
               </div>
