@@ -251,6 +251,9 @@ function getCountryTravelContext(origenStr, destinoStr) {
   const isBrasil    = o.includes('brasil') || o.includes('brazil') || o.includes('são paulo') || o.includes('sao paulo') || o.includes('rio de janeiro') || o.includes('brasília') || o.includes('brasilia') || o.includes('porto alegre') || o.includes('florianópolis') || o.includes('florianopolis') || o.includes('belo horizonte') || o.includes('salvador') || o.includes('fortaleza') || o.includes('recife');
   const isColombia  = o.includes('colombia') || o.includes('bogotá') || o.includes('bogota') || o.includes('medellín') || o.includes('medellin') || o.includes('cali') || o.includes('cartagena de indias') || o.includes('barranquilla') || o.includes('bucaramanga');
   const isMexico    = (o.includes('méxico') || o.includes('mexico')) && !o.includes('nuevo mexico') || o.includes('ciudad de méxico') || o.includes('cdmx') || o.includes('guadalajara') || o.includes('monterrey') || o.includes('cancún') || o.includes('cancun') || o.includes('puebla') || o.includes('tijuana');
+  const isPerú      = o.includes('perú') || o.includes('peru') || o.includes('lima') || o.includes('arequipa') || o.includes('cusco') || o.includes('trujillo') || o.includes('piura') || o.includes('iquitos');
+  const isUruguay   = o.includes('uruguay') || o.includes('montevideo') || o.includes('punta del este') || o.includes('salto') || o.includes('colonia del sacramento');
+  const isEcuador   = o.includes('ecuador') || o.includes('quito') || o.includes('guayaquil') || o.includes('cuenca') || o.includes('manta') || o.includes('loja');
 
   // ── Adaptador de enchufe según destino ──────────────────────────────────
   let adapterInfo = '';
@@ -542,6 +545,128 @@ function getCountryTravelContext(origenStr, destinoStr) {
       visaInfo = 'PASAPORTE (VISA ON ARRIVAL): Los mexicanos obtienen Visa on Arrival en Indonesia (~US$35) por 30 días, prorrogable 30 días más. Pasaporte con 6 meses de validez.';
     else
       visaInfo = 'PASAPORTE: Verifica los requisitos de visa en sre.gob.mx (Secretaría de Relaciones Exteriores de México). Estándar: pasaporte vigente con al menos 6 meses de validez desde la fecha de regreso.';
+
+  } else if (isPerú) {
+    if (d.includes('eeuu') || d.includes('estados unidos') || d.includes('nueva york') || d.includes('new york') || d.includes('miami') || d.includes('los angeles') || d.includes('chicago') || d.includes('orlando') || d.includes('washington') || d.includes('houston'))
+      visaInfo = 'PASAPORTE + VISA B1/B2: Los peruanos NECESITAN visa para EE.UU. Tramitar con anticipación en la Embajada de EE.UU. en Lima (pe.usembassy.gov). El proceso puede tardar semanas o meses.';
+    else if (d.includes('canadá') || d.includes('canada') || d.includes('toronto') || d.includes('vancouver') || d.includes('montreal'))
+      visaInfo = 'PASAPORTE + VISA: Los peruanos necesitan visa de turista para Canadá. Tramitar con anticipación en ircc.canada.ca.';
+    else if (d.includes('europa') || d.includes('schengen') || d.includes('españa') || d.includes('france') || d.includes('paris') || d.includes('italia') || d.includes('roma') || d.includes('alemania') || d.includes('berlin') || d.includes('grecia') || d.includes('portugal') || d.includes('lisboa') || d.includes('holanda') || d.includes('amsterdam') || d.includes('suiza') || d.includes('austria') || d.includes('viena') || d.includes('hungría') || d.includes('budapest') || d.includes('república checa') || d.includes('praga') || d.includes('madrid') || d.includes('barcelona'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los peruanos viajan SIN VISA a la Zona Schengen hasta 90 días gracias al acuerdo UE-Perú vigente desde 2023. Solo pasaporte con al menos 6 meses de validez.';
+    else if (d.includes('reino unido') || d.includes('uk') || d.includes('inglaterra') || d.includes('londres') || d.includes('london'))
+      visaInfo = 'PASAPORTE + VISA UK: Los peruanos necesitan visa para el Reino Unido. Tramitar en gov.uk/uk-visa. Pasaporte vigente con al menos 6 meses de validez.';
+    else if (d.includes('australia') || d.includes('sydney') || d.includes('melbourne'))
+      visaInfo = 'PASAPORTE + VISA: Los peruanos necesitan Visitor Visa (Subclase 600) para Australia. Tramitar online en immi.homeaffairs.gov.au.';
+    else if (d.includes('japon') || d.includes('japón') || d.includes('tokyo') || d.includes('osaka') || d.includes('kyoto'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los peruanos viajan SIN VISA a Japón hasta 90 días por acuerdo bilateral. Solo pasaporte vigente — sin trámites previos.';
+    else if (d.includes('tailandia') || d.includes('thailand') || d.includes('bangkok') || d.includes('phuket'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los peruanos viajan SIN VISA a Tailandia hasta 30 días. Pasaporte vigente obligatorio.';
+    else if (d.includes('turquía') || d.includes('turquia') || d.includes('estambul') || d.includes('istanbul'))
+      visaInfo = 'PASAPORTE + e-VISA: Los peruanos necesitan e-Visa para Turquía (~US$50), tramitable en evisa.gov.tr.';
+    else if (d.includes('emiratos') || d.includes('dubai') || d.includes('abu dhabi'))
+      visaInfo = 'PASAPORTE (VISA ON ARRIVAL): Los peruanos pueden obtener visa gratuita al llegar a Emiratos Árabes. Pasaporte con al menos 6 meses de validez.';
+    else if (d.includes('chile') || d.includes('santiago'))
+      visaInfo = 'PASAPORTE O DNI PERUANO: Los peruanos pueden entrar a Chile con su DNI peruano vigente. Sin visa — estadía hasta 90 días.';
+    else if (d.includes('argentina') || d.includes('buenos aires') || d.includes('mendoza') || d.includes('bariloche'))
+      visaInfo = 'PASAPORTE O DNI PERUANO: Los peruanos ingresan a Argentina con DNI peruano vigente. Sin visa — estadía hasta 90 días.';
+    else if (d.includes('brasil') || d.includes('brazil') || d.includes('río de janeiro') || d.includes('rio de janeiro') || d.includes('são paulo') || d.includes('sao paulo') || d.includes('florianópolis') || d.includes('florianopolis'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los peruanos viajan a Brasil sin visa hasta 90 días. Pasaporte peruano vigente (en Brasil no se acepta DNI extranjero).';
+    else if (d.includes('colombia') || d.includes('bogotá') || d.includes('bogota') || d.includes('cartagena') || d.includes('medellín') || d.includes('medellin'))
+      visaInfo = 'PASAPORTE O CÉDULA PERUANA: Los peruanos viajan a Colombia sin visa. Como miembros de la Comunidad Andina (CAN) pueden ingresar con cédula/DNI peruano vigente.';
+    else if (d.includes('bolivia') || d.includes('la paz') || d.includes('santa cruz') || d.includes('cochabamba'))
+      visaInfo = 'PASAPORTE O DNI PERUANO: Los peruanos viajan a Bolivia sin visa. Como miembros de la Comunidad Andina (CAN) pueden ingresar con DNI peruano vigente.';
+    else if (d.includes('ecuador') || d.includes('quito') || d.includes('guayaquil'))
+      visaInfo = 'PASAPORTE O CÉDULA PERUANA: Los peruanos viajan a Ecuador sin visa. Como miembros de la Comunidad Andina (CAN) pueden ingresar con cédula/DNI peruano vigente.';
+    else if (d.includes('uruguay') || d.includes('montevideo') || d.includes('punta del este'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los peruanos viajan a Uruguay sin visa hasta 90 días. Pasaporte peruano vigente.';
+    else if (d.includes('méxico') || d.includes('mexico') || d.includes('cancún') || d.includes('cancun') || d.includes('ciudad de méxico') || d.includes('cdmx'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los peruanos viajan a México sin visa hasta 180 días. Pasaporte peruano vigente obligatorio.';
+    else if (d.includes('cuba') || d.includes('habana') || d.includes('varadero'))
+      visaInfo = 'PASAPORTE + TARJETA DEL TURISTA: Los peruanos necesitan Tarjeta del Turista para Cuba (~US$25), comprable en el aeropuerto o aerolínea. Pasaporte vigente.';
+    else
+      visaInfo = 'PASAPORTE: Verifica los requisitos de visa actualizados en rree.gob.pe (Ministerio de Relaciones Exteriores del Perú) antes de viajar. Los requisitos pueden cambiar — consulta siempre la fuente oficial más cercana a tu fecha de viaje.';
+
+  } else if (isUruguay) {
+    if (d.includes('eeuu') || d.includes('estados unidos') || d.includes('nueva york') || d.includes('new york') || d.includes('miami') || d.includes('los angeles') || d.includes('chicago') || d.includes('orlando') || d.includes('washington') || d.includes('houston'))
+      visaInfo = 'PASAPORTE + VISA B1/B2: Los uruguayos NECESITAN visa para EE.UU. Tramitar en la Embajada de EE.UU. en Montevideo (uy.usembassy.gov). El proceso puede tardar semanas.';
+    else if (d.includes('canadá') || d.includes('canada') || d.includes('toronto') || d.includes('vancouver') || d.includes('montreal'))
+      visaInfo = 'PASAPORTE + VISA o eTA: Los uruguayos necesitan visa de turista para Canadá (o eTA si viajaron antes en avión con visa canadiense). Tramitar en ircc.canada.ca.';
+    else if (d.includes('europa') || d.includes('schengen') || d.includes('españa') || d.includes('france') || d.includes('paris') || d.includes('italia') || d.includes('roma') || d.includes('alemania') || d.includes('berlin') || d.includes('grecia') || d.includes('portugal') || d.includes('lisboa') || d.includes('holanda') || d.includes('amsterdam') || d.includes('suiza') || d.includes('austria') || d.includes('viena') || d.includes('hungría') || d.includes('budapest') || d.includes('república checa') || d.includes('praga') || d.includes('madrid') || d.includes('barcelona'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan SIN VISA a la Zona Schengen hasta 90 días. Pasaporte con al menos 6 meses de validez desde la fecha de regreso.';
+    else if (d.includes('reino unido') || d.includes('uk') || d.includes('inglaterra') || d.includes('londres') || d.includes('london'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan SIN VISA al Reino Unido hasta 6 meses. Pasaporte vigente obligatorio.';
+    else if (d.includes('australia') || d.includes('sydney') || d.includes('melbourne'))
+      visaInfo = 'PASAPORTE + eVisitor: Los uruguayos necesitan eVisitor (651) para Australia, GRATUITO, tramitable online en immi.homeaffairs.gov.au. Pasaporte vigente obligatorio.';
+    else if (d.includes('japon') || d.includes('japón') || d.includes('tokyo') || d.includes('osaka') || d.includes('kyoto'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan SIN VISA a Japón hasta 90 días. Solo pasaporte vigente — sin trámites previos.';
+    else if (d.includes('tailandia') || d.includes('thailand') || d.includes('bangkok') || d.includes('phuket'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan SIN VISA a Tailandia hasta 30 días. Pasaporte vigente obligatorio.';
+    else if (d.includes('turquía') || d.includes('turquia') || d.includes('estambul') || d.includes('istanbul'))
+      visaInfo = 'PASAPORTE + e-VISA: Los uruguayos necesitan e-Visa para Turquía (~US$50), tramitable en evisa.gov.tr.';
+    else if (d.includes('emiratos') || d.includes('dubai') || d.includes('abu dhabi'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan SIN VISA a Emiratos Árabes Unidos hasta 90 días. Pasaporte con al menos 6 meses de validez.';
+    else if (d.includes('china') || d.includes('beijing') || d.includes('shanghai'))
+      visaInfo = 'PASAPORTE + VISA: Los uruguayos necesitan visa para China. Tramitar en la Embajada de China en Montevideo con anticipación.';
+    else if (d.includes('argentina') || d.includes('buenos aires') || d.includes('mendoza') || d.includes('bariloche'))
+      visaInfo = 'DNI URUGUAYO O PASAPORTE: Los uruguayos entran a Argentina con su DNI uruguayo vigente (MERCOSUR). Sin visa — estadía hasta 90 días.';
+    else if (d.includes('brasil') || d.includes('brazil') || d.includes('río de janeiro') || d.includes('rio de janeiro') || d.includes('são paulo') || d.includes('sao paulo') || d.includes('florianópolis') || d.includes('florianopolis'))
+      visaInfo = 'DNI URUGUAYO O PASAPORTE: Los uruguayos entran a Brasil con su DNI uruguayo vigente (MERCOSUR). Sin visa — estadía hasta 90 días.';
+    else if (d.includes('chile') || d.includes('santiago'))
+      visaInfo = 'PASAPORTE O DNI URUGUAYO: Los uruguayos entran a Chile con DNI uruguayo vigente. Sin visa — estadía hasta 90 días.';
+    else if (d.includes('colombia') || d.includes('bogotá') || d.includes('bogota') || d.includes('cartagena') || d.includes('medellín') || d.includes('medellin'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan a Colombia sin visa hasta 90 días. Pasaporte uruguayo vigente.';
+    else if (d.includes('perú') || d.includes('peru') || d.includes('lima') || d.includes('cusco'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan a Perú sin visa hasta 90 días. Pasaporte uruguayo vigente.';
+    else if (d.includes('bolivia') || d.includes('la paz') || d.includes('santa cruz'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan a Bolivia sin visa. Pasaporte uruguayo vigente.';
+    else if (d.includes('ecuador') || d.includes('quito') || d.includes('guayaquil'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan a Ecuador sin visa hasta 90 días. Pasaporte uruguayo vigente.';
+    else if (d.includes('méxico') || d.includes('mexico') || d.includes('cancún') || d.includes('cancun') || d.includes('ciudad de méxico') || d.includes('cdmx'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los uruguayos viajan a México sin visa hasta 180 días. Pasaporte uruguayo vigente obligatorio.';
+    else if (d.includes('cuba') || d.includes('habana') || d.includes('varadero'))
+      visaInfo = 'PASAPORTE + TARJETA DEL TURISTA: Los uruguayos necesitan Tarjeta del Turista para Cuba, comprable en el aeropuerto o aerolínea. Pasaporte vigente.';
+    else
+      visaInfo = 'PASAPORTE: Verifica los requisitos de visa actualizados en mrree.gub.uy (Ministerio de Relaciones Exteriores del Uruguay) antes de viajar. Los requisitos pueden cambiar — consulta siempre la fuente oficial más cercana a tu fecha de viaje.';
+
+  } else if (isEcuador) {
+    if (d.includes('eeuu') || d.includes('estados unidos') || d.includes('nueva york') || d.includes('new york') || d.includes('miami') || d.includes('los angeles') || d.includes('chicago') || d.includes('orlando') || d.includes('washington') || d.includes('houston'))
+      visaInfo = 'PASAPORTE + VISA B1/B2: Los ecuatorianos NECESITAN visa para EE.UU. Tramitar en la Embajada de EE.UU. en Quito (ec.usembassy.gov). El proceso puede tardar semanas o meses.';
+    else if (d.includes('canadá') || d.includes('canada') || d.includes('toronto') || d.includes('vancouver') || d.includes('montreal'))
+      visaInfo = 'PASAPORTE + VISA: Los ecuatorianos necesitan visa de turista para Canadá. Tramitar con anticipación en ircc.canada.ca.';
+    else if (d.includes('europa') || d.includes('schengen') || d.includes('españa') || d.includes('france') || d.includes('paris') || d.includes('italia') || d.includes('roma') || d.includes('alemania') || d.includes('berlin') || d.includes('grecia') || d.includes('portugal') || d.includes('lisboa') || d.includes('holanda') || d.includes('amsterdam') || d.includes('suiza') || d.includes('austria') || d.includes('viena') || d.includes('hungría') || d.includes('budapest') || d.includes('república checa') || d.includes('praga') || d.includes('madrid') || d.includes('barcelona'))
+      visaInfo = 'PASAPORTE + VISA SCHENGEN: Los ecuatorianos NECESITAN visa para la Zona Schengen (Ecuador no tiene acuerdo de liberalización de visas con la UE, a diferencia de Colombia y Perú). Tramitar en la embajada del país de mayor estadía.';
+    else if (d.includes('reino unido') || d.includes('uk') || d.includes('inglaterra') || d.includes('londres') || d.includes('london'))
+      visaInfo = 'PASAPORTE + VISA UK: Los ecuatorianos necesitan visa para el Reino Unido. Tramitar en gov.uk/uk-visa con anticipación.';
+    else if (d.includes('australia') || d.includes('sydney') || d.includes('melbourne'))
+      visaInfo = 'PASAPORTE + VISA: Los ecuatorianos necesitan Visitor Visa (Subclase 600) para Australia. Tramitar online en immi.homeaffairs.gov.au.';
+    else if (d.includes('japon') || d.includes('japón') || d.includes('tokyo') || d.includes('osaka') || d.includes('kyoto'))
+      visaInfo = 'PASAPORTE + VISA: Los ecuatorianos necesitan visa para Japón. Tramitar en la Embajada de Japón en Quito con anticipación.';
+    else if (d.includes('tailandia') || d.includes('thailand') || d.includes('bangkok') || d.includes('phuket'))
+      visaInfo = 'PASAPORTE + VISA ON ARRIVAL: Los ecuatorianos pueden obtener Visa on Arrival en Tailandia (30 días). Pasaporte vigente y fondos suficientes.';
+    else if (d.includes('turquía') || d.includes('turquia') || d.includes('estambul') || d.includes('istanbul'))
+      visaInfo = 'PASAPORTE + e-VISA: Los ecuatorianos necesitan e-Visa para Turquía (~US$50), tramitable en evisa.gov.tr.';
+    else if (d.includes('emiratos') || d.includes('dubai') || d.includes('abu dhabi'))
+      visaInfo = 'PASAPORTE + VISA: Los ecuatorianos necesitan visa para Emiratos Árabes Unidos. Tramitar con la aerolínea o embajada de EAU en Quito. Pasaporte con al menos 6 meses de validez.';
+    else if (d.includes('chile') || d.includes('santiago'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los ecuatorianos viajan a Chile sin visa hasta 90 días. Pasaporte ecuatoriano vigente obligatorio.';
+    else if (d.includes('argentina') || d.includes('buenos aires') || d.includes('mendoza') || d.includes('bariloche'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los ecuatorianos viajan a Argentina sin visa hasta 90 días. Pasaporte ecuatoriano vigente.';
+    else if (d.includes('brasil') || d.includes('brazil') || d.includes('río de janeiro') || d.includes('rio de janeiro') || d.includes('são paulo') || d.includes('sao paulo') || d.includes('florianópolis') || d.includes('florianopolis'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los ecuatorianos viajan a Brasil sin visa hasta 90 días. Pasaporte ecuatoriano vigente.';
+    else if (d.includes('colombia') || d.includes('bogotá') || d.includes('bogota') || d.includes('cartagena') || d.includes('medellín') || d.includes('medellin'))
+      visaInfo = 'PASAPORTE O CÉDULA ECUATORIANA: Los ecuatorianos viajan a Colombia sin visa. Como miembros de la Comunidad Andina (CAN) pueden ingresar con cédula ecuatoriana vigente.';
+    else if (d.includes('perú') || d.includes('peru') || d.includes('lima') || d.includes('cusco'))
+      visaInfo = 'PASAPORTE O CÉDULA ECUATORIANA: Los ecuatorianos viajan a Perú sin visa. Como miembros de la Comunidad Andina (CAN) pueden ingresar con cédula ecuatoriana vigente.';
+    else if (d.includes('bolivia') || d.includes('la paz') || d.includes('santa cruz') || d.includes('cochabamba'))
+      visaInfo = 'PASAPORTE O CÉDULA ECUATORIANA: Los ecuatorianos viajan a Bolivia sin visa. Como miembros de la Comunidad Andina (CAN) pueden ingresar con cédula ecuatoriana vigente.';
+    else if (d.includes('uruguay') || d.includes('montevideo') || d.includes('punta del este'))
+      visaInfo = 'PASAPORTE (SIN VISA): Los ecuatorianos viajan a Uruguay sin visa hasta 90 días. Pasaporte ecuatoriano vigente.';
+    else if (d.includes('méxico') || d.includes('mexico') || d.includes('cancún') || d.includes('cancun') || d.includes('ciudad de méxico') || d.includes('cdmx'))
+      visaInfo = 'PASAPORTE + VISA: Los ecuatorianos necesitan visa para México (requerida desde 2023 por acuerdo migratorio). Tramitar en la Embajada de México en Quito con anticipación.';
+    else if (d.includes('cuba') || d.includes('habana') || d.includes('varadero'))
+      visaInfo = 'PASAPORTE + TARJETA DEL TURISTA: Los ecuatorianos necesitan Tarjeta del Turista para Cuba, comprable en el aeropuerto o aerolínea. Pasaporte vigente.';
+    else
+      visaInfo = 'PASAPORTE: Verifica los requisitos de visa actualizados en cancilleria.gob.ec (Ministerio de Relaciones Exteriores del Ecuador) antes de viajar. Los requisitos pueden cambiar — consulta siempre la fuente oficial más cercana a tu fecha de viaje.';
   }
 
   const lines = [];
