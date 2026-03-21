@@ -24,9 +24,17 @@ function buildAirbnbUrl(destino, checkin, checkout, adults) {
   return `https://www.airbnb.com/s/${encodeURIComponent(destino || '')}/homes?checkin=${checkin || ''}&checkout=${checkout || ''}&adults=${adults || 2}`;
 }
 
-function buildHostelworldUrl(destino, checkin, checkout, adults) {
-  const p = new URLSearchParams({ search_keywords: destino || '', dateFrom: checkin || '', dateTo: checkout || '', numberOfGuests: adults || 2 });
-  return `https://www.hostelworld.com/search?${p}`;
+function buildHostelworldUrl(destino, checkin, checkout, adults, nombre) {
+  // Hostelworld requiere fechas en formato DD/MM/YYYY (codificado como DD%2FMM%2FYYYY)
+  const fmtHW = (dateStr) => {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}%2F${m}%2F${y}`;
+  };
+  // Si hay nombre del hostal, buscar por nombre + ciudad para encontrar el hostal específico
+  const keyword = nombre ? `${nombre}, ${destino}` : (destino || '');
+  const dest = encodeURIComponent(keyword);
+  return `https://www.hostelworld.com/search?search_keywords=${dest}&dateFrom=${fmtHW(checkin)}&dateTo=${fmtHW(checkout)}&numberOfGuests=${adults || 2}`;
 }
 
 function alojamientoLink(op, destino, checkin, checkout, adults) {
@@ -35,7 +43,7 @@ function alojamientoLink(op, destino, checkin, checkout, adults) {
   const plat = (op.plataforma || '').toLowerCase();
   const nombre = (op.nombre || '').trim();
 
-  if (plat.includes('hostel')) return buildHostelworldUrl(destino, checkin, checkout, adults);
+  if (plat.includes('hostel')) return buildHostelworldUrl(destino, checkin, checkout, adults, nombre);
 
   if (plat.includes('airbnb')) {
     // Airbnb: buscamos por ciudad + nombre en el query
@@ -126,9 +134,8 @@ function buildAirlineUrl(aerolinea, origenIata, destinoIata, fechaSalida, fechaR
 
   // ── Europeas ──────────────────────────────────────────────────────────────
   if (a.includes('iberia') && !a.includes('express')) {
-    // Iberia usa su motor "Onda" — parámetros en minúsculas, fecha DD/MM/YYYY
-    const fmt = (dateStr) => { if (!dateStr) return ''; const [y,m,d2] = dateStr.split('-'); return `${d2}%2F${m}%2F${y}`; };
-    return `https://www.iberia.com/es/vuelos/?adults=${n}&children=0&infants=0&origin=${o}&destination=${d}&departure=${fmt(dep)}${ret ? `&return=${fmt(ret)}&triptype=R` : '&triptype=OW'}`;
+    // Iberia deep-link: /comprar/vuelos/ con fechas YYYY-MM-DD
+    return `https://www.iberia.com/es/comprar/vuelos/?adults=${n}&children=0&infants=0&origin=${o}&destination=${d}&departure=${dep}${ret ? `&return=${ret}&triptype=R` : '&triptype=OW'}`;
   }
   if (a.includes('iberia express') || (a.includes('iberia') && a.includes('express'))) {
     return `https://booking.iberiaexpress.com/es/vuelos?adults=${n}&origin=${o}&destination=${d}&departureDate=${dep}&returnDate=${ret}`;
@@ -288,10 +295,14 @@ function ItinerarioContent() {
   const [planId, setPlanId]         = useState('basico');
   const [activeTab, setActiveTab]   = useState('resumen');
   const [contactOpen, setContactOpen] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [printAll, setPrintAll] = useState(false);
 
   useEffect(() => {
     const plan = searchParams.get('plan') || localStorage.getItem('vivante_planId') || 'basico';
     setPlanId(plan);
+    // Persistir planId en localStorage para que sobreviva recargas
+    try { localStorage.setItem('vivante_planId', plan); } catch {}
     let data = null;
     try { data = JSON.parse(localStorage.getItem('vivante_formData') || 'null'); } catch {}
     if (!data) { setEstado('error'); return; }
@@ -352,6 +363,45 @@ function ItinerarioContent() {
   const isPro = planId === 'pro';
   const res   = itinerario?.resumen || {};
 
+  // ─── Descargar PDF con html2pdf.js (sin URL de navegador, sin página en blanco) ──
+  const handleDownloadPdf = async () => {
+    setPdfLoading(true);
+    setPrintAll(true);
+    // Esperar que React re-renderice con todas las secciones visibles
+    await new Promise(r => setTimeout(r, 400));
+    try {
+      const html2pdfLib = await import('html2pdf.js');
+      const html2pdfFn = html2pdfLib.default || html2pdfLib;
+      const element = document.getElementById('vivante-print-content');
+      if (!element) { window.print(); return; }
+      const destName = ((itinerario?.resumen?.destino || formData?.destino || 'viaje')
+        .split(',')[0]).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      await new Promise((resolve, reject) => {
+        html2pdfFn()
+          .set({
+            margin: [10, 8, 10, 8],
+            filename: `itinerario-vivante-${destName}.pdf`,
+            image: { type: 'jpeg', quality: 0.92 },
+            html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: 'avoid-all', before: '.print-break' },
+          })
+          .from(element)
+          .save()
+          .then(resolve)
+          .catch(reject);
+      });
+    } catch (err) {
+      console.error('PDF error:', err);
+      window.print(); // fallback
+    } finally {
+      setPrintAll(false);
+      setPdfLoading(false);
+    }
+  };
+
   // Helpers para redes sociales — usa solo el nombre de la ciudad principal
   const destRaw = (res.destino || formData?.destino || '').split(/[,(]/)[0].trim();
   const destTag = destRaw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
@@ -375,7 +425,8 @@ function ItinerarioContent() {
     imperdible:   '⭐ Imperdible',
   };
 
-  const show = (tab) => activeTab === tab;
+  // printAll: true cuando se está generando el PDF (html2pdf.js necesita ver todas las secciones)
+  const show = (tab) => printAll || activeTab === tab;
 
   return (
     <div style={{ minHeight: '100vh', background: C.crema, fontFamily: 'Inter, sans-serif' }}>
@@ -386,21 +437,25 @@ function ItinerarioContent() {
         .tab-btn { border: none; background: none; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: Inter, sans-serif; }
         /* ── PRINT: mostrar TODAS las secciones ── */
         @media print {
-          /* Quitar URL/fecha del header y footer del navegador */
+          /* Eliminar URL/fecha del header y footer del navegador — margin:0 lo suprime */
           @page {
             size: A4 portrait;
-            margin: 12mm 10mm 12mm 10mm;
+            margin: 0;
           }
-          /* Primera sección: sin page-break antes (evita página en blanco inicial) */
+          /* Padding interno para compensar el margin:0 */
+          body { background: #FCF8F4 !important; margin: 0 !important; padding: 10mm !important; }
+          /* Ocultar completamente elementos no imprimibles (sin espacio residual) */
+          .no-print { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important; max-height: 0 !important; }
+          /* Mostrar TODAS las secciones del itinerario */
+          .vivante-section  { display: block !important; margin-bottom: 14px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+          /* IMPORTANTE: primera sección → sin salto de página antes (evita primera página en blanco) */
           .print-break:first-of-type { page-break-before: auto !important; break-before: auto !important; }
-          /* Resto de secciones: page-break entre ellas */
+          /* Resto de secciones principales: salto de página entre ellas */
           .print-break ~ .print-break { page-break-before: always !important; break-before: page !important; }
-          /* Evitar cortes dentro de secciones y dentro de tarjetas de días */
-          .vivante-section  { display: block !important; margin-bottom: 16px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
-          .day-card         { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 14px !important; }
-          .no-print         { display: none !important; }
+          /* Tarjetas de días: no se cortan en el medio */
+          .day-card         { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 12px !important; }
+          /* Colores exactos en impresión */
           *                 { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          body              { background: #FCF8F4 !important; margin: 0 !important; padding: 0 !important; }
         }
       `}</style>
 
@@ -427,9 +482,10 @@ function ItinerarioContent() {
         )}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginTop: 8 }}>
           <button
-            onClick={() => window.print()}
-            style={{ background: '#fff', color: C.coral, border: 'none', padding: '10px 20px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-            📄 Descargar PDF completo
+            onClick={handleDownloadPdf}
+            disabled={pdfLoading}
+            style={{ background: '#fff', color: C.coral, border: 'none', padding: '10px 20px', borderRadius: 10, fontWeight: 700, cursor: pdfLoading ? 'wait' : 'pointer', fontSize: 14, opacity: pdfLoading ? 0.7 : 1 }}>
+            {pdfLoading ? '⏳ Generando PDF...' : '📄 Descargar PDF completo'}
           </button>
           <div style={{ position: 'relative' }}>
             <button
@@ -477,8 +533,17 @@ function ItinerarioContent() {
         ))}
       </div>
 
-      {/* CONTENIDO */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '20px 14px' }}>
+      {/* CONTENIDO — id necesario para html2pdf.js */}
+      <div id="vivante-print-content" style={{ maxWidth: 760, margin: '0 auto', padding: '20px 14px' }}>
+
+        {/* CABECERA PDF: solo visible en el PDF generado con html2pdf.js */}
+        {printAll && (
+          <div style={{ textAlign: 'center', padding: '16px 0 20px', borderBottom: `3px solid ${C.coral}`, marginBottom: 20 }}>
+            <div style={{ color: C.coral, fontFamily: 'Syne, sans-serif', fontSize: 26, fontWeight: 800, letterSpacing: -1 }}>VIVANTE</div>
+            <div style={{ color: C.carbon, fontSize: 17, fontWeight: 700, marginTop: 4 }}>{itinerario?.titulo || `Itinerario: ${formData?.destino}`}</div>
+            {itinerario?.subtitulo && <div style={{ color: '#666', fontSize: 13, fontStyle: 'italic', marginTop: 3 }}>{itinerario.subtitulo}</div>}
+          </div>
+        )}
 
         {/* ══ RESUMEN ══════════════════════════════════════════════════════════ */}
         <div className="vivante-section" style={{ display: show('resumen') ? 'block' : 'none' }}>
