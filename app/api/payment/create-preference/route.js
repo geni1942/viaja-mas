@@ -33,7 +33,8 @@ export async function POST(req) {
         name: nombre,
       },
       back_urls: {
-        success: `${baseUrl}/pago-exitoso`,
+        // IMPORTANTE: incluir ?plan= para que pago-exitoso sepa qué plan compró el usuario
+        success: `${baseUrl}/pago-exitoso?plan=${planId}`,
         failure: `${baseUrl}/pago-fallido`,
         pending: `${baseUrl}/pago-pendiente`,
       },
