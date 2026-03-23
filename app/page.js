@@ -94,7 +94,7 @@ export default function Home() {
               width={180}
               height={130}
               priority
-              style={{ height: '70px', width: 'auto' }}
+              style={{ height: '80px', width: 'auto' }}
             />
           </div>
           <button
@@ -129,7 +129,7 @@ export default function Home() {
             </button>
 
             {/* Destino indicator */}
-            <div className="mt-6 flex flex-wrap items-center gap-4">
+            <div className="mt-3 flex flex-wrap items-center gap-4">
               <span className="text-white/50 text-sm">Ahora viendo:</span>
               <span className="text-white font-medium">{destinosHero[currentDestino].nombre}, {destinosHero[currentDestino].pais}</span>
               <div className="flex gap-1.5">
