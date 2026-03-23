@@ -1366,6 +1366,7 @@ IMPORTANTE sobre dias_pro: para CADA día del viaje (${formData.dias} días), in
               headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 from: 'VIVANTE <onboarding@resend.dev>',
+                reply_to: 'vive.vivante.ch@gmail.com',
                 to: [formData.email],
                 subject: `⭐ Tu itinerario VIVANTE Pro está listo — ${mergedItinerary.titulo || 'Tu aventura'}`,
                 html: emailHtmlPro,
@@ -1496,6 +1497,7 @@ IMPORTANTE sobre dias_pro: para CADA día del viaje (${formData.dias} días), in
         },
         body: JSON.stringify({
           from: 'VIVANTE <onboarding@resend.dev>',
+          reply_to: 'vive.vivante.ch@gmail.com',
           to: [formData.email],
           subject: `✈️ ${itinerario.titulo || 'Tu itinerario VIVANTE está listo'} — ${planLabel}`,
           html: emailHtml,
