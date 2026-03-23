@@ -275,7 +275,7 @@ function ItinerarioContent() {
       <img
         src="/images/vivante_logo.svg"
         alt="VIVANTE"
-        style={{ height: 80, width: 'auto', marginBottom: 24, animation: 'spin 2s linear infinite' }}
+        style={{ height: 120, width: 'auto', marginBottom: 24, animation: 'spin 2s linear infinite', filter: 'brightness(0)' }}
         onError={e => { e.target.style.display = 'none'; }}
       />
       <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 26, color: C.carbon, margin: '0 0 8px', textAlign: 'center' }}>Preparando tu aventura...</h1>
