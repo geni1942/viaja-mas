@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, Plane, MapPin, Users, Sparkles, Loader2, RefreshCw, Check, CreditCard } from 'lucide-react';
 
-export default function TravelForm({ onClose }) {
+export default function TravelForm({ onClose, initialDestino = '' }) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
@@ -19,8 +19,8 @@ export default function TravelForm({ onClose }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   
   const [formData, setFormData] = useState({
-    tieneDestino: null,
-    destino: '',
+    tieneDestino: initialDestino ? true : null,
+    destino: initialDestino,
     origen: '',
     presupuesto: 2000,
     dias: 7,
