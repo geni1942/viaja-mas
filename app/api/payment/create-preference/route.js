@@ -67,7 +67,7 @@ export async function POST(req) {
       ? (data.sandbox_init_point || data.init_point)
       : data.init_point;
 
-    return NextResponse.json({ init_point: checkoutUrl });
+    return NextResponse.json({ init_point: checkoutUrl, preference_id: data.id });
   } catch (error) {
     console.error('Payment preference error:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
