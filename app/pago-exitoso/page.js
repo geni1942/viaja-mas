@@ -203,9 +203,24 @@ function ItinerarioContent() {
     setPlanId(plan);
     // Persistir planId en localStorage para que sobreviva recargas
     try { localStorage.setItem('vivante_planId', plan); } catch {}
+
+    // ── Leer formData: intentar con preference_id (más seguro) y luego fallback genérico ──
     let data = null;
-    try { data = JSON.parse(localStorage.getItem('vivante_formData') || 'null'); } catch {}
-    if (!data) { setEstado('error'); return; }
+    const prefId = searchParams.get('preference_id');
+    if (prefId) {
+      try { data = JSON.parse(localStorage.getItem(`vivante_pref_${prefId}`) || 'null'); } catch {}
+    }
+    if (!data) {
+      try {
+        const raw = localStorage.getItem('vivante_formData');
+        const ts  = parseInt(localStorage.getItem('vivante_formData_ts') || '0');
+        // Aceptar datos recientes (últimas 4 horas) o sin timestamp (compatibilidad hacia atrás)
+        if (raw && (ts === 0 || Date.now() - ts < 4 * 60 * 60 * 1000)) {
+          data = JSON.parse(raw);
+        }
+      } catch {}
+    }
+    if (!data || !data.destino?.trim()) { setEstado('error'); return; }
     setFormData(data);
     // Basic→Pro continuity: si es upgrade Pro, pasar el itinerario básico como base
     // ⚠️ IMPORTANTE: verificar que el basicItinerary corresponde al MISMO destino actual
@@ -243,6 +258,12 @@ function ItinerarioContent() {
         if (plan !== 'pro') {
           try { localStorage.setItem('vivante_basic_itinerary', JSON.stringify(res.itinerario)); } catch {}
         }
+        // ✅ Limpiar datos de sesión para evitar que una compra anterior contamine la próxima
+        try {
+          localStorage.removeItem('vivante_formData');
+          localStorage.removeItem('vivante_formData_ts');
+          if (prefId) localStorage.removeItem(`vivante_pref_${prefId}`);
+        } catch {}
       }
       else setEstado('error');
     }).catch(() => setEstado('error'));
