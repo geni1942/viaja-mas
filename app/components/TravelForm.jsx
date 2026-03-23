@@ -301,6 +301,13 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
               <button
                 onClick={async () => {
                   if (!selectedPlan) return;
+                  // ✅ Guardar formData ANTES de la llamada async para evitar cualquier problema de closure
+                  const snapFormData = { ...formData };
+                  try {
+                    localStorage.setItem('vivante_formData', JSON.stringify(snapFormData));
+                    localStorage.setItem('vivante_planId', selectedPlan);
+                    localStorage.setItem('vivante_formData_ts', Date.now().toString());
+                  } catch {}
                   setIsSubmitting(true);
                   setError(null);
                   try {
@@ -312,14 +319,16 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                         planNombre: planSeleccionado?.nombre,
                         precio: planSeleccionado?.precioClp, // CLP para MercadoPago Chile
                         precioUsd: planSeleccionado?.precio,
-                        email: formData.email,
-                        nombre: formData.nombre,
+                        email: snapFormData.email,
+                        nombre: snapFormData.nombre,
                       }),
                     });
                     const data = await res.json();
                     if (data.init_point) {
-                      localStorage.setItem('vivante_formData', JSON.stringify(formData));
-                      localStorage.setItem('vivante_planId', selectedPlan);
+                      // Guardar también con preference_id como clave adicional de seguridad
+                      if (data.preference_id) {
+                        try { localStorage.setItem(`vivante_pref_${data.preference_id}`, JSON.stringify(snapFormData)); } catch {}
+                      }
                       window.location.href = data.init_point;
                     } else {
                       throw new Error(data.error || 'No se pudo iniciar el pago');
