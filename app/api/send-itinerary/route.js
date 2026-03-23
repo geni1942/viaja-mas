@@ -739,6 +739,7 @@ DATOS DEL CLIENTE:
 - Intereses: ${Array.isArray(formData.intereses) ? formData.intereses.join(', ') : (formData.intereses || 'cultura, gastronomía')}
 - Ritmo: ${formData.ritmo <= 2 ? 'Relajado (max 2 actividades/día)' : formData.ritmo <= 3 ? 'Moderado (2-3 actividades)' : 'Intenso (3-4 actividades)'}
 - Alojamiento preferido: ${formData.alojamiento || 'hotel'}
+${formData.tipoViaje === 'familia' && (formData.numViajeros || 2) > 2 ? `- Composición del grupo: ${formData.numViajeros} personas (adultos + niños estimados: ${(formData.numViajeros || 2) - 2} niño${(formData.numViajeros || 2) - 2 !== 1 ? 's' : ''}). Planifica con ritmo familiar y actividades para todas las edades.` : ''}
 ${budgetWarning}
 Hoy es ${today}. Los precios, vuelos y datos de alojamiento deben ser realistas para esta fecha.
 Para fecha_salida y fecha_regreso: propón fechas REALES en formato YYYY-MM-DD, mínimo 6-8 semanas desde hoy (${today}), en temporada ideal para el destino. fecha_regreso = fecha_salida + ${dias} días.
@@ -776,7 +777,7 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
     const interesStr = Array.isArray(formData.intereses) ? formData.intereses.join(', ') : (formData.intereses || 'cultura, gastronomía');
     const tipoViaje  = (formData.tipoViaje || 'pareja').toLowerCase();
     const tipoViajeRule = tipoViaje === 'familia'
-      ? `- TIPO DE VIAJE: FAMILIA. Adapta TODO el itinerario para viaje familiar: (1) Actividades aptas para niños de distintas edades (zoológicos, parques de diversiones, playas seguras, museos interactivos). (2) Restaurantes con menú infantil y mesas amplias. (3) Alojamiento con habitaciones familiares o conectadas. (4) Ritmo más tranquilo con descansos y opciones de backup si los niños se cansan. (5) Evita actividades de alto riesgo o exclusivas para adultos. Tono del texto: cálido, familiar y considerado con todas las edades.`
+      ? `- TIPO DE VIAJE: FAMILIA. Adapta TODO el itinerario para viaje familiar: (1) Actividades aptas para niños de distintas edades (zoológicos, parques de diversiones, playas seguras, museos interactivos). (2) Restaurantes con menú infantil y mesas amplias. (3) Alojamiento con habitaciones familiares o conectadas. (4) Ritmo más tranquilo con descansos y opciones de backup si los niños se cansan. (5) Evita actividades de alto riesgo o exclusivas para adultos. (6) Si numViajeros > 2, hay niños — incluye parques temáticos, actividades acuáticas o museos interactivos específicos del destino. Tono del texto: cálido, familiar y considerado con todas las edades.`
       : tipoViaje === 'pareja'
         ? `- TIPO DE VIAJE: PAREJA. Adapta TODO el itinerario para viaje romántico: (1) Experiencias íntimas (cenas con vista, paseos al atardecer, spas, tours privados). (2) Restaurantes con ambiente romántico (no bulliciosos). (3) Alojamiento con opción de habitación doble especial o suite. (4) Actividades en pareja (clases de cocina para dos, paseos en bote, miradores). Tono del texto: cálido, evocador y romántico.`
         : tipoViaje === 'solo'
