@@ -9,49 +9,12 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [currentDestino, setCurrentDestino] = useState(0);
   const [showContact, setShowContact] = useState(false);
-  const [initialDestino, setInitialDestino] = useState('');
-
-  // ── Exit Intent (Option A) ────────────────────────────────────────────────
-  const [showExitIntent, setShowExitIntent] = useState(false);
-  const [exitEmail, setExitEmail]           = useState('');
-  const [exitSubmitting, setExitSubmitting] = useState(false);
-  const [exitDone, setExitDone]             = useState(false);
-
-  useEffect(() => {
-    // Mostrar solo una vez por sesión; no mostrar si ya tiene email guardado
-    const alreadyShown = sessionStorage.getItem('vivante_exit_shown');
-    if (alreadyShown) return;
-    const handler = (e) => {
-      // Solo disparar cuando el mouse sale por la parte superior de la ventana
-      if (e.clientY <= 10 && !showForm) {
-        sessionStorage.setItem('vivante_exit_shown', '1');
-        setShowExitIntent(true);
-      }
-    };
-    document.addEventListener('mouseleave', handler);
-    return () => document.removeEventListener('mouseleave', handler);
-  }, [showForm]);
-
-  const handleExitSubmit = async () => {
-    if (!exitEmail.includes('@') || !exitEmail.includes('.')) return;
-    setExitSubmitting(true);
-    try {
-      localStorage.setItem('vivante_lead', JSON.stringify({ email: exitEmail, ts: Date.now(), source: 'exit_intent' }));
-      fetch('/api/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: exitEmail, nombre: '', destino: '' }),
-      }).catch(() => {});
-      setExitDone(true);
-    } catch (_) {}
-    setExitSubmitting(false);
-  };
 
   const destinosHero = [
-    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres del paine, Chile.jpg' },
-    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini, Grecia.jpg' },
-    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali, Indonesia.jpg' },
-    { nombre: 'Tokio', pais: 'Japón', imagen: '/images/Tokio, Japón.jpg' },
+    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres%20del%20paine%2C%20Chile.jpg' },
+    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini%2C%20Grecia.jpg' },
+    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali%2C%20Indonesia.jpg' },
+    { nombre: 'Tokio', pais: 'Japón', imagen: '/images/Tokio%2C%20Jap%C3%B3n.jpg' },
   ];
 
   useEffect(() => {
@@ -62,12 +25,12 @@ export default function Home() {
   }, []);
 
   const destinos = [
-    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres del paine, Chile.jpg', tag: '🇨🇱 Local' },
-    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini, Grecia.jpg', tag: '🔥 Popular' },
-    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali, Indonesia.jpg', tag: '✨ Trending' },
-    { nombre: 'Machu Picchu', pais: 'Perú', imagen: '/images/Machu Picchu, Peru.jpg', tag: '🎒 Aventura' },
-    { nombre: 'Cartagena', pais: 'Colombia', imagen: '/images/cartagena.jpg', tag: '🏖️ Playa' },
-    { nombre: 'Barcelona', pais: 'España', imagen: '/images/Barcelona, España.jpg', tag: '🎨 Cultura' },
+    { nombre: 'Torres del Paine', pais: 'Chile', imagen: '/images/Torres%20del%20paine%2C%20Chile.jpg', precio: 'Desde $400.000 CLP', tag: '🇨🇱 Local' },
+    { nombre: 'Santorini', pais: 'Grecia', imagen: '/images/Santorini%2C%20Grecia.jpg', precio: 'Desde $1.200 USD', tag: '🔥 Popular' },
+    { nombre: 'Bali', pais: 'Indonesia', imagen: '/images/Bali%2C%20Indonesia.jpg', precio: 'Desde $1.500 USD', tag: '✨ Trending' },
+    { nombre: 'Machu Picchu', pais: 'Perú', imagen: '/images/Machu%20Picchu%2C%20Peru.jpg', precio: 'Desde $600 USD', tag: '🎒 Aventura' },
+    { nombre: 'Cartagena', pais: 'Colombia', imagen: '/images/cartagena.jpg', precio: 'Desde $500 USD', tag: '🏖️ Playa' },
+    { nombre: 'Barcelona', pais: 'España', imagen: '/images/Barcelona%2C%20Espa%C3%B1a.jpg', precio: 'Desde $1.100 USD', tag: '🎨 Cultura' },
   ];
 
   return (
@@ -80,7 +43,7 @@ export default function Home() {
             className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
               currentDestino === index ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{ backgroundImage: `url('${encodeURI(destino.imagen)}')` }}
+            style={{ backgroundImage: `url("${destino.imagen}")` }}
           />
         ))}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
@@ -91,10 +54,10 @@ export default function Home() {
             <Image
               src="/images/vivante_logo.svg"
               alt="VIVANTE"
-              width={180}
-              height={130}
+              width={160}
+              height={117}
               priority
-              style={{ height: '64px', width: 'auto' }}
+              style={{ height: '62px', width: 'auto' }}
             />
           </div>
           <button
@@ -129,7 +92,7 @@ export default function Home() {
             </button>
 
             {/* Destino indicator */}
-            <div className="mt-12 flex items-center gap-4">
+            <div className="mt-6 flex items-center gap-4 flex-wrap">
               <span className="text-white/50 text-sm">Ahora viendo:</span>
               <span className="text-white font-medium">{destinosHero[currentDestino].nombre}, {destinosHero[currentDestino].pais}</span>
               <div className="flex gap-1.5">
@@ -156,18 +119,20 @@ export default function Home() {
       {/* Stats Section */}
       <section className="bg-gradient-to-r from-orange-500 to-pink-500 py-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center text-white">
+          <div className="grid grid-cols-3 gap-8 text-center text-white">
             <div>
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold">40+</div>
-              <div className="text-white/80 text-xs sm:text-sm md:text-base mt-1">horas ahorradas por viaje</div>
+              <div className="text-3xl sm:text-4xl font-bold">156+</div>
+              <div className="text-white/80 text-sm sm:text-base">Destinos disponibles</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold">$10</div>
-              <div className="text-white/80 text-xs sm:text-sm md:text-base mt-1">USD tu itinerario completo</div>
+              <div className="text-3xl sm:text-4xl font-bold">50+</div>
+              <div className="text-white/80 text-sm sm:text-base">Países cubiertos</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold">100%</div>
-              <div className="text-white/80 text-xs sm:text-sm md:text-base mt-1">personalizado a tu viaje</div>
+              <div className="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-bold">
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
+              </div>
+              <div className="text-white/80 text-sm sm:text-base">Itinerarios personalizados</div>
             </div>
           </div>
         </div>
@@ -221,130 +186,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Vista previa del itinerario ───────────────────────────────────── */}
-      <section className="py-16 sm:py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-14">
-            <span className="inline-block bg-orange-100 text-orange-600 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
-              Así se ve
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Tu itinerario, día a día
-            </h2>
-            <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto">
-              Cada actividad, restaurante y link listo para reservar con un clic
-            </p>
-          </div>
-
-          {/* Tabs de días */}
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-            <span className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-              Día 1 ✓
-            </span>
-            {['Día 2','Día 3','Día 4'].map((d) => (
-              <span key={d} className="flex-shrink-0 bg-gray-100 text-gray-400 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1">
-                🔒 {d}
-              </span>
-            ))}
-            <span className="flex-shrink-0 bg-gray-100 text-gray-300 px-4 py-2 rounded-full text-sm font-semibold">
-              +3 más…
-            </span>
-          </div>
-
-          {/* Día 1 — visible */}
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-3">
-            <div className="bg-gradient-to-r from-orange-500 to-pink-500 px-5 sm:px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="bg-white/25 text-white text-sm font-bold px-3 py-1 rounded-full">Día 1</span>
-                  <div>
-                    <p className="text-white font-semibold text-sm sm:text-base">Llegada a Tokio · Asakusa</p>
-                    <p className="text-white/70 text-xs">Tokio, Japón 🇯🇵</p>
-                  </div>
-                </div>
-                <span className="hidden sm:block text-white/70 text-xs bg-white/10 px-3 py-1 rounded-full">
-                  Vista previa gratuita
-                </span>
-              </div>
-            </div>
-
-            <div className="divide-y divide-gray-50">
-              {[
-                { hora:'09:00', emoji:'🏛️', lugar:'Templo Senso-ji', tag:'Cultura',      link:'Ver en Get Your Guide →', desc:'El templo más visitado de Japón. Llegá temprano para vivirlo antes de las multitudes — el ambiente es otro.' },
-                { hora:'12:30', emoji:'🍜', lugar:'Tsukiji Outer Market', tag:'Gastronomía', link:null,                       desc:'Sushi fresco, tamagoyaki y ramen auténtico desde $10 USD. Pedile recomendación al vendedor de turno.' },
-                { hora:'15:00', emoji:'🌆', lugar:'Shibuya Crossing + Harajuku', tag:'Imperdible',  link:'Tour guiado →',              desc:'El cruce más transitado del mundo. Subí al Starbucks frente al semáforo para la foto perfecta. Gratis.' },
-                { hora:'19:30', emoji:'🍶', lugar:'Cena en Omoide Yokocho', tag:'Local',        link:null,                       desc:'"Memory Lane": callejón de 1948 con tabernas de yakitori y sake. Una de las experiencias más auténticas de Tokio.' },
-              ].map((item, i) => (
-                <div key={i} className="px-5 sm:px-6 py-3 sm:py-4 flex gap-3 sm:gap-4 hover:bg-orange-50/30 transition-colors">
-                  <div className="text-xs text-gray-400 font-mono w-10 flex-shrink-0 pt-1">{item.hora}</div>
-                  <div className="text-lg sm:text-xl flex-shrink-0 mt-0.5">{item.emoji}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                      <p className="font-semibold text-gray-800 text-sm sm:text-base">{item.lugar}</p>
-                      <span className="text-xs bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full border border-orange-100">{item.tag}</span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{item.desc}</p>
-                    {item.link && (
-                      <p className="text-xs text-orange-500 font-medium mt-1 hover:underline cursor-pointer">{item.link}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="px-5 sm:px-6 py-3 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center gap-2 sm:gap-4">
-              <span className="text-xs text-gray-500">💰 ~$45 USD/persona</span>
-              <span className="hidden sm:block text-xs text-gray-300">·</span>
-              <span className="text-xs text-gray-500">🚇 Suica card recomendada</span>
-              <span className="hidden sm:block text-xs text-gray-300">·</span>
-              <span className="text-xs text-gray-500">🏨 Hotel en Shinjuku (incluido)</span>
-            </div>
-          </div>
-
-          {/* Día 2 — bloqueado */}
-          <div className="relative mb-8">
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden blur-[3px] select-none pointer-events-none">
-              <div className="bg-gray-100 px-5 sm:px-6 py-4 flex items-center gap-3">
-                <span className="bg-gray-200 text-gray-400 text-sm font-bold px-3 py-1 rounded-full">Día 2</span>
-                <p className="text-gray-400 font-semibold text-sm">Kioto — Templos y tradición</p>
-              </div>
-              <div className="divide-y divide-gray-50">
-                {[1,2,3].map((_,i) => (
-                  <div key={i} className="px-5 sm:px-6 py-4 flex gap-4">
-                    <div className="w-10 h-3 bg-gray-100 rounded mt-1 flex-shrink-0"></div>
-                    <div className="w-6 h-6 bg-gray-100 rounded-full flex-shrink-0"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3.5 bg-gray-100 rounded w-36"></div>
-                      <div className="h-3 bg-gray-50 rounded w-full"></div>
-                      <div className="h-3 bg-gray-50 rounded w-3/4"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white/98 border border-orange-100 rounded-2xl px-6 sm:px-10 py-4 sm:py-5 text-center shadow-xl">
-                <span className="text-2xl sm:text-3xl mb-2 block">🔒</span>
-                <p className="text-gray-800 font-bold text-sm sm:text-base">Días 2 al 7 en tu itinerario</p>
-                <p className="text-gray-400 text-xs sm:text-sm mt-1">Kioto · Osaka · Hiroshima y más</p>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center">
-            <button
-              onClick={() => setShowForm(true)}
-              className="group bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-8 sm:px-10 py-4 rounded-2xl text-base sm:text-lg font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-orange-500/25 inline-flex items-center gap-3"
-            >
-              Crear mi itinerario completo
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <p className="text-gray-400 text-sm mt-3">Desde $10 USD · Tu plan listo en minutos</p>
-          </div>
-        </div>
-      </section>
-
       {/* Destinos Populares */}
       <section className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -372,7 +213,7 @@ export default function Home() {
               <div
                 key={i}
                 className="group relative rounded-3xl overflow-hidden cursor-pointer aspect-[4/5] sm:aspect-[3/4]"
-                onClick={() => { setInitialDestino(`${destino.nombre}, ${destino.pais}`); setShowForm(true); }}
+                onClick={() => setShowForm(true)}
               >
                 <img
                   src={destino.imagen}
@@ -388,7 +229,8 @@ export default function Home() {
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <p className="text-white/70 text-sm">{destino.pais}</p>
                   <h3 className="text-white text-2xl font-bold mb-2">{destino.nombre}</h3>
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between">
+                    <p className="text-orange-400 font-semibold">{destino.precio}</p>
                     <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight className="w-5 h-5 text-white" />
                     </div>
@@ -430,7 +272,7 @@ export default function Home() {
               { icon: Plane, title: 'Vuelos recomendados', desc: 'Las mejores opciones según tu origen y presupuesto', color: 'from-blue-500 to-cyan-500' },
               { icon: Hotel, title: 'Alojamiento ideal', desc: 'Hoteles, Airbnb o hostales según tu estilo', color: 'from-purple-500 to-pink-500' },
               { icon: Calendar, title: 'Itinerario día a día', desc: 'Cada día planificado con horarios y actividades', color: 'from-orange-500 to-red-500' },
-              { icon: MapPin, title: 'Lugares secretos', desc: 'Tips de locales para una experiencia inolvidable', color: 'from-green-500 to-emerald-500' },
+              { icon: MapPin, title: 'Lugares secretos', desc: 'Tips de locales que no están en las guías', color: 'from-green-500 to-emerald-500' },
               { icon: Sparkles, title: 'Restaurantes top', desc: 'Dónde comer según tus gustos y presupuesto', color: 'from-yellow-500 to-orange-500' },
               { icon: CheckCircle, title: 'Links directos', desc: 'Todo listo para reservar con un clic', color: 'from-pink-500 to-rose-500' },
             ].map((item, i) => (
@@ -446,93 +288,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Planes y Precios */}
-      <section id="precios" className="py-16 sm:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12 sm:mb-16">
-            <span className="inline-block bg-purple-100 text-purple-600 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
-              Planes y Precios
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Elige tu experiencia
-            </h2>
-            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-              Un solo pago. Todo el itinerario listo para reservar. Sin suscripciones.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* Vivante Básico */}
-            <div className="bg-white rounded-3xl p-8 border-2 border-gray-200 hover:border-gray-300 transition-all relative flex flex-col">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">Vivante Básico</h3>
-                <p className="text-gray-500 text-sm mb-6">Itinerario personalizado día a día</p>
-                <div className="mb-6">
-                  <span className="text-5xl font-bold text-gray-900">$10</span>
-                  <span className="text-gray-500 ml-2">USD</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    'Itinerario completo en PDF',
-                    'Links de vuelos y alojamientos',
-                    'Puntos de interés',
-                    'Tips culturales, de conectividad y dinero',
-                    'Tips locales básicos para viajeros',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
-                      <span className="text-gray-600 text-sm">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                onClick={() => setShowForm(true)}
-                className="w-full py-4 rounded-2xl border-2 border-gray-900 text-gray-900 font-semibold hover:bg-gray-900 hover:text-white transition-all mt-auto"
-              >
-                Comenzar con Básico
-              </button>
-            </div>
-
-            {/* Vivante Pro */}
-            <div className="bg-gray-900 rounded-3xl p-8 border-2 border-gray-900 transition-all relative flex flex-col">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-5 py-2 rounded-full whitespace-nowrap">
-                ⭐ RECOMENDADO
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-1">Vivante Pro</h3>
-                <p className="text-gray-400 text-sm mb-6">Experiencia premium con todos los detalles</p>
-                <div className="mb-6">
-                  <span className="text-5xl font-bold text-white">$17</span>
-                  <span className="text-gray-400 ml-2">USD</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    'Todo lo del Vivante Básico',
-                    'Restaurantes recomendados por zona y RRSS',
-                    'Opciones de tours y actividades',
-                    'Tips de seguridad y transporte',
-                    'Presupuesto detallado por día',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="text-orange-400 mt-0.5 flex-shrink-0">✓</span>
-                      <span className="text-gray-300 text-sm">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                onClick={() => setShowForm(true)}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold hover:opacity-90 hover:scale-[1.02] transition-all mt-auto"
-              >
-                Comenzar con Pro →
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonios — debajo de Pricing (mejor conversión: social proof cierra la decisión) */}
+      {/* Testimonios */}
       <section className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12 sm:mb-16">
@@ -578,15 +334,99 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-600 mb-8 text-lg leading-relaxed">&ldquo;{t.texto}&rdquo;</p>
-                <div className="flex items-center gap-4">
-                  <img src={t.imagen} alt={t.nombre} className="w-14 h-14 rounded-full object-cover ring-4 ring-white" />
-                  <div>
-                    <div className="font-bold text-gray-900">{t.nombre}</div>
-                    <div className="text-gray-500 text-sm">{t.ciudad}</div>
-                  </div>
+                <div className="text-right">
+                  <div className="font-bold text-gray-900">{t.nombre}</div>
+                  <div className="text-gray-500 text-sm">{t.ciudad}</div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Planes y Precios */}
+      <section id="precios" className="py-16 sm:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <span className="inline-block bg-purple-100 text-purple-600 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+              Planes y Precios
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Elige tu experiencia
+            </h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+              Un solo pago. Todo el itinerario listo para reservar. Sin suscripciones.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Vivante Básico */}
+            <div className="bg-white rounded-3xl p-8 border-2 border-gray-200 hover:border-gray-300 transition-all relative flex flex-col">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">Vivante Básico</h3>
+                <p className="text-gray-500 text-sm mb-6">Itinerario personalizado día a día</p>
+                <div className="mb-6">
+                  <span className="text-5xl font-bold text-gray-900">$17</span>
+                  <span className="text-gray-500 ml-2">USD</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Itinerario completo en PDF',
+                    'Links de vuelos y alojamientos',
+                    'Puntos de interés',
+                    'Tips culturales, de conectividad y dinero',
+                    'Tips locales básicos para viajeros',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                      <span className="text-gray-600 text-sm">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="w-full py-4 rounded-2xl border-2 border-gray-900 text-gray-900 font-semibold hover:bg-gray-900 hover:text-white transition-all mt-auto"
+              >
+                Comenzar con Básico
+              </button>
+            </div>
+
+            {/* Vivante Pro */}
+            <div className="bg-gray-900 rounded-3xl p-8 border-2 border-gray-900 transition-all relative flex flex-col">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold px-5 py-2 rounded-full whitespace-nowrap">
+                ⭐ RECOMENDADO
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-1">Vivante Pro</h3>
+                <p className="text-gray-400 text-sm mb-6">Experiencia premium con todos los detalles</p>
+                <div className="mb-6">
+                  <span className="text-5xl font-bold text-white">$25</span>
+                  <span className="text-gray-400 ml-2">USD</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Todo lo del Vivante Básico',
+                    'Restaurantes recomendados por zona y RRSS',
+                    'Opciones de tours y actividades',
+                    'Tips de seguridad y transporte',
+                    'Tips culturales, de conectividad y dinero',
+                    'Presupuesto detallado por día',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="text-orange-400 mt-0.5 flex-shrink-0">✓</span>
+                      <span className="text-gray-300 text-sm">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold hover:opacity-90 hover:scale-[1.02] transition-all mt-auto"
+              >
+                Comenzar con Pro →
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -628,9 +468,9 @@ export default function Home() {
               <Image
                 src="/images/vivante_logo.svg"
                 alt="VIVANTE"
-                width={150}
-                height={108}
-                style={{ height: '56px', width: 'auto' }}
+                width={110}
+                height={80}
+                style={{ height: '40px', width: 'auto' }}
               />
             </div>
 
@@ -688,7 +528,7 @@ export default function Home() {
             </a>
             {/* TikTok */}
             <a
-              href="http://www.tiktok.com/@vivevivante"
+              href="https://www.tiktok.com/@vive.vivante"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-white transition-colors"
@@ -707,91 +547,7 @@ export default function Home() {
       </footer>
 
       {/* Modal del formulario */}
-      {showForm && <TravelForm onClose={() => { setShowForm(false); setInitialDestino(''); }} initialDestino={initialDestino} />}
-
-      {/* ── Exit Intent Popup (Option A) ─────────────────────────────────── */}
-      {showExitIntent && !showForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
-            {/* Botón cerrar */}
-            <button
-              onClick={() => setShowExitIntent(false)}
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 z-10 text-gray-500 font-bold"
-            >
-              ✕
-            </button>
-
-            {/* Header naranja */}
-            <div className="bg-gradient-to-r from-orange-500 to-pink-500 px-8 pt-8 pb-6 text-center">
-              <div className="text-4xl mb-3">✈️</div>
-              <h2 className="text-white text-2xl font-bold leading-tight">
-                ¡Un segundo antes de irte!
-              </h2>
-              <p className="text-white/90 text-sm mt-2">
-                Recibe tips de viaje exclusivos y sé el primero en enterarte de nuestras ofertas.
-              </p>
-            </div>
-
-            {/* Body */}
-            <div className="px-8 py-6">
-              {!exitDone ? (
-                <>
-                  <div className="flex gap-3 mb-4 text-sm text-gray-600">
-                    <span>✅ Tips de planificación</span>
-                    <span>✅ Ofertas exclusivas</span>
-                  </div>
-                  <input
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={exitEmail}
-                    onChange={(e) => setExitEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleExitSubmit()}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none text-base mb-3"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleExitSubmit}
-                    disabled={exitSubmitting || !exitEmail.includes('@')}
-                    className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
-                      exitEmail.includes('@') && !exitSubmitting
-                        ? 'bg-gradient-to-r from-orange-500 to-pink-500 hover:opacity-90 hover:shadow-lg'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {exitSubmitting ? 'Guardando...' : '¡Quiero mis tips gratis! 🎒'}
-                  </button>
-                  <p className="text-center text-xs text-gray-400 mt-3">
-                    Sin spam. Solo lo bueno. Podés darte de baja cuando quieras.
-                  </p>
-                  <button
-                    onClick={() => setShowExitIntent(false)}
-                    className="w-full text-center text-xs text-gray-400 mt-2 hover:text-gray-600 py-1"
-                  >
-                    No gracias, prefiero planificar solo.
-                  </button>
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <div className="text-5xl mb-3">🎉</div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">¡Listo! Ya estás dentro.</h3>
-                  <p className="text-gray-500 text-sm mb-5">
-                    Pronto recibirás nuestros mejores tips de viaje. ✈️
-                  </p>
-                  <button
-                    onClick={() => { setShowExitIntent(false); setShowForm(true); }}
-                    className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all"
-                  >
-                    Planificar mi viaje ahora →
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {showForm && <TravelForm onClose={() => setShowForm(false)} />}
     </main>
   );
 }
