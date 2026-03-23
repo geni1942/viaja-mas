@@ -678,7 +678,8 @@ function getCountryTravelContext(origenStr, destinoStr) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { formData, planId, basicItinerary } = body;
+    const { formData, planId } = body;
+    let basicItinerary = body.basicItinerary ?? null; // let para poder invalidarlo si el destino no coincide
 
     if (!formData?.email || !formData?.nombre) {
       return NextResponse.json({ error: 'Faltan datos del formulario' }, { status: 400 });
