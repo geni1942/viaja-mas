@@ -220,6 +220,11 @@ function ItinerarioContent() {
         }
       } catch {}
     }
+    // ── Override destino desde URL si está disponible (más confiable que localStorage stale) ──
+    const destinoFromUrl = searchParams.get('d');
+    if (destinoFromUrl && data) {
+      data = { ...data, destino: decodeURIComponent(destinoFromUrl) };
+    }
     if (!data || !data.destino?.trim()) { setEstado('error'); return; }
     setFormData(data);
     // Basic→Pro continuity: si es upgrade Pro, pasar el itinerario básico como base
