@@ -469,7 +469,6 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
         'Itinerario completo en PDF',
         'Links de vuelos y alojamientos',
         'Puntos de interés',
-        'Tips culturales, de conectividad y dinero',
         'Tips locales básicos para viajeros'
       ]
     },
@@ -485,7 +484,6 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
         'Opciones de tours y actividades',
         'Tips de seguridad y transporte',
         'Tips culturales, de conectividad y dinero',
-        'Presupuesto detallado por día'
       ],
       popular: true
     }
