@@ -684,6 +684,59 @@ function getCountryTravelContext(origenStr, destinoStr) {
   return lines.join('\n');
 }
 
+// ============================================================
+// HELPER: Rebuild accommodation links with actual travel dates
+// Called server-side after AI generates the itinerary JSON.
+// ============================================================
+function injectDatesIntoLinks(itinerario, numViajeros) {
+  if (!itinerario || !Array.isArray(itinerario.alojamiento)) return itinerario;
+  const fechaSalida  = (itinerario.resumen?.fecha_salida  || '').trim();
+  const fechaRegreso = (itinerario.resumen?.fecha_regreso || '').trim();
+  if (!fechaSalida) return itinerario;
+  const viajeros = numViajeros || 2;
+  itinerario.alojamiento = itinerario.alojamiento.map(destObj => {
+    if (!destObj.opciones || !Array.isArray(destObj.opciones)) return destObj;
+    const ciudad = encodeURIComponent((destObj.destino || '').split(/[,(-]/)[0].trim());
+    destObj.opciones = destObj.opciones.map(opcion => {
+      const plat = (opcion.plataforma || '').toLowerCase();
+      const oldLink = opcion.link || '';
+      let link = oldLink;
+      if (plat.includes('booking')) {
+        const nflt = oldLink.includes('pt%3D11') ? 'pt%3D11' : 'ht_id%3D204';
+        link = `https://www.booking.com/searchresults.html?ss=${ciudad}&checkin=${fechaSalida}&checkout=${fechaRegreso}&group_adults=${viajeros}&nflt=${nflt}`;
+      } else if (plat.includes('hostelworld')) {
+        link = `https://www.hostelworld.com/pwa#/search?search_keywords=${ciudad}&dateFrom=${fechaSalida}&dateTo=${fechaRegreso}&guests=${viajeros}`;
+      } else if (plat.includes('airbnb')) {
+        link = `https://www.airbnb.com/s/${ciudad}/homes?checkin=${fechaSalida}&checkout=${fechaRegreso}&adults=${viajeros}`;
+      }
+      return { ...opcion, link };
+    });
+    return destObj;
+  });
+  return itinerario;
+}
+
+// ============================================================
+// HELPER: Add Google Flights + Skyscanner search links to vuelos
+// ============================================================
+function injectFlightSearchLinks(itinerario) {
+  if (!itinerario?.resumen) return itinerario;
+  const ori = (itinerario.resumen.origen_iata  || '').toUpperCase().trim();
+  const dst = (itinerario.resumen.destino_iata || '').toUpperCase().trim();
+  const fS  = (itinerario.resumen.fecha_salida  || '').trim();
+  const fR  = (itinerario.resumen.fecha_regreso || '').trim();
+  if (!ori || !dst || !fS || ori.length !== 3 || dst.length !== 3) return itinerario;
+  const fSsk = fS.replace(/-/g, '').substring(2);
+  const fRsk = fR ? fR.replace(/-/g, '').substring(2) : '';
+  itinerario._vuelos_links = {
+    google_flights: `https://www.google.com/travel/flights?q=Flights+from+${ori}+to+${dst}+on+${fS}` + (fR ? `+return+${fR}` : ''),
+    skyscanner: fR
+      ? `https://www.skyscanner.com/transport/flights/${ori.toLowerCase()}/${dst.toLowerCase()}/${fSsk}/${fRsk}/`
+      : `https://www.skyscanner.com/transport/flights/${ori.toLowerCase()}/${dst.toLowerCase()}/${fSsk}/`,
+  };
+  return itinerario;
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -799,7 +852,7 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
 
     // ── Regla ALOJAMIENTO según preferencia ─────────────────────────────────
     const alojRule = alojPref === 'hostal'
-      ? `- ALOJAMIENTO: El cliente eligió HOSTALES. Las 3 opciones (Económico, Confort, Premium) DEBEN ser hostales/albergues reales con nombre verificable en Hostelworld. PROHIBIDO recomendar hoteles de cadena (Hilton, Marriott, Ibis, etc.) ni Airbnb. Las 3 plataformas son TODAS "Hostelworld". Busca hostales reales en el destino.`
+      ? `- ALOJAMIENTO: El cliente eligió HOSTALES. Las 3 opciones (Económico, Confort, Premium) DEBEN ser hostales/albergues reales con nombre verificable en Hostelworld. PROHIBIDO recomendar hoteles de cadena (Hilton, Marriott, Ibis, etc.) ni Airbnb. Las 3 plataformas son TODAS "Hostelworld". Busca hostales reales en el destino. IMPORTANTE: En el campo destino del objeto alojamiento usa el nombre de la ciudad en INGLES para mejor compatibilidad con Hostelworld (Bangkok, Prague, Lisbon, Rome, Vienna, etc).`
       : alojPref === 'airbnb'
         ? `- ALOJAMIENTO: El cliente eligió AIRBNB. Las 3 opciones deben ser propiedades reales en Airbnb (apartamentos, casas, estudios). SIEMPRE incluye EXACTAMENTE 3 opciones por ciudad: Económico, Confort y Premium. Nunca menos de 3.`
         : alojPref === 'bnb'
@@ -822,13 +875,13 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
       ? 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS&nflt=pt%3D11'
       : 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS&nflt=ht_id%3D204';
     const linkEco  = platEco  === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
-                   : platEco  === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
+                   : platEco  === 'Hostelworld'   ? 'https://www.hostelworld.com/pwa#/search?search_keywords=CIUDAD'
                    : bookingUrl;
     const linkMid  = platMid  === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
-                   : platMid  === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
+                   : platMid  === 'Hostelworld'   ? 'https://www.hostelworld.com/pwa#/search?search_keywords=CIUDAD'
                    : bookingUrl;
     const linkPrem = platPrem === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
-                   : platPrem === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
+                   : platPrem === 'Hostelworld'   ? 'https://www.hostelworld.com/pwa#/search?search_keywords=CIUDAD'
                    : bookingUrl;
 
     const alojamientoSchema = `
@@ -1486,6 +1539,8 @@ IMPORTANTE sobre dias_pro: para CADA día del viaje (${formData.dias} días), in
 
       if (!parsed) throw new Error('No valid JSON found');
       itinerario = parsed;
+      itinerario = injectDatesIntoLinks(itinerario, formData.numViajeros);
+      itinerario = injectFlightSearchLinks(itinerario);
       console.log('Itinerario parseado OK. Secciones:', Object.keys(itinerario).join(', '));
     } catch (e) {
       console.error('JSON parse error:', e.message);
