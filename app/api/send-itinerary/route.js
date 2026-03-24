@@ -218,8 +218,17 @@ async function generateItinerarioPdf(itinerario, formData, planLabel) {
     const docDefinition = {
       content,
       defaultStyle: { font: 'Roboto', fontSize: 11, color: carbon },
-      pageMargins: [40, 50, 40, 50],
-      info: { title: itinerario.titulo || 'Itinerario VIVANTE', author: 'VIVANTE' },
+      pageMargins: [40, 60, 40, 50],
+      header: (currentPage) => {
+      if (currentPage === 1) return null;
+      return {
+        columns: [
+          { text: 'VIVANTE', fontSize: 8, bold: true, color: carbon, margin: [40, 20, 0, 0] },
+          { text: '', width: '*' },
+        ],
+      };
+    },
+    info: { title: itinerario.titulo || 'Itinerario VIVANTE', author: 'VIVANTE' },
     };
 
     return await new Promise((resolve, reject) => {
