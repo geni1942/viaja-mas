@@ -31,6 +31,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
     alojamiento: '',
     nombre: '',
     email: '',
+    numNinos: 0,
   });
 
   const planes = [
@@ -321,6 +322,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                         precioUsd: planSeleccionado?.precio,
                         email: snapFormData.email,
                         nombre: snapFormData.nombre,
+                        destino: snapFormData.destino,  // ← para codificar en back_url.success
                       }),
                     });
                     const data = await res.json();
@@ -567,6 +569,16 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                       <button onClick={() => formData.numViajeros > 2 && setFormData({ ...formData, numViajeros: formData.numViajeros - 1 })} className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center font-bold">−</button>
                       <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">{formData.numViajeros}</span>
                       <button onClick={() => setFormData({ ...formData, numViajeros: formData.numViajeros + 1 })} className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center font-bold">+</button>
+                    </div>
+                  </div>
+                )}
+                {formData.tipoViaje === 'familia' && (
+                  <div className="fade-in">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">¿Cuántos niños viajan? <span className="text-gray-400 font-normal">(aproximado)</span></label>
+                    <div className="flex items-center justify-center gap-6 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <button type="button" onClick={() => setFormData(prev => ({...prev, numNinos: Math.max(0, (prev.numNinos || 0) - 1)}))} className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center font-bold text-orange-500 hover:bg-orange-50">−</button>
+                      <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">{formData.numNinos || 0}</span>
+                      <button type="button" onClick={() => setFormData(prev => ({...prev, numNinos: Math.min(8, (prev.numNinos || 0) + 1)}))} className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center font-bold text-orange-500 hover:bg-orange-50">+</button>
                     </div>
                   </div>
                 )}
