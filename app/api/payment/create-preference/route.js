@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   try {
-    const { planId, planNombre, precio, email, nombre } = await req.json();
+    const { planId, planNombre, precio, email, nombre, destino } = await req.json();
 
     if (!planId || !precio || !email) {
       return NextResponse.json({ error: 'Faltan datos del plan' }, { status: 400 });
@@ -33,8 +33,8 @@ export async function POST(req) {
         name: nombre,
       },
       back_urls: {
-        // IMPORTANTE: incluir ?plan= para que pago-exitoso sepa qué plan compró el usuario
-        success: `${baseUrl}/pago-exitoso?plan=${planId}`,
+        // IMPORTANTE: incluir ?plan= y ?d= para que pago-exitoso sepa qué plan y destino compró el usuario
+        success: `${baseUrl}/pago-exitoso?plan=${planId}&d=${encodeURIComponent(destino || '')}`,
         failure: `${baseUrl}/pago-fallido`,
         pending: `${baseUrl}/pago-pendiente`,
       },
