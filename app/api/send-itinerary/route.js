@@ -1442,6 +1442,8 @@ IMPORTANTE sobre dias_pro: para CADA día del viaje (${formData.dias} días), in
             if (!emailRes.ok) console.error('Resend Pro email error:', await emailRes.text());
           }
 
+          injectDatesIntoLinks(mergedItinerary, formData.numViajeros);
+          injectFlightSearchLinks(mergedItinerary);
           return NextResponse.json({ itinerario: mergedItinerary, planId });
         }
       }
