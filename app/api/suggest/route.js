@@ -1,26 +1,24 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
     const data = await request.json();
     
-    // Formatear intereses para el prompt
+    // ── Intereses con prioridad ───────────────────────────────────────────────
     const interesesMap = {
-      'playa': 'Playa y mar',
-      'cultura': 'Cultura e historia',
-      'aventura': 'Aventura y deportes extremos',
-      'gastronomia': 'Gastronomía',
-      'relax': 'Relax y bienestar',
-      'naturaleza': 'Naturaleza y paisajes',
-      'nocturna': 'Vida nocturna',
-      'deporte': 'Deportes',
-      'shopping': 'Compras y shopping',
+      'playa': 'Playa y mar', 'cultura': 'Cultura e historia',
+      'aventura': 'Aventura y deportes extremos', 'gastronomia': 'Gastronomía',
+      'relax': 'Relax y bienestar', 'naturaleza': 'Naturaleza y paisajes',
+      'nocturna': 'Vida nocturna', 'deporte': 'Deportes', 'shopping': 'Compras y shopping',
     };
-    
-    const interesesTexto = data.intereses
-      .map(i => interesesMap[i] || i)
-      .join(', ');
-    
+    const interesesArray = Array.isArray(data.intereses) ? data.intereses : [];
+    const interesesTexto = interesesArray.length > 0
+      ? interesesArray.map((i, idx) => {
+          const pesos = ['PRINCIPAL', 'secundario', 'complementario', 'ocasional'];
+          return `${interesesMap[i] || i} (${pesos[idx] || 'ocasional'})`;
+        }).join(', ')
+      : 'cultura, gastronomía';
+
     const ritmoTexto = data.ritmo <= 2 ? 'relajado' : data.ritmo <= 3 ? 'moderado' : 'intenso';
 
     const alojamientoMap = {
@@ -31,45 +29,86 @@ export async function POST(request) {
     };
     const alojTexto = alojamientoMap[data.alojamiento] || 'Hotel';
 
-    const familiaCtx = data.tipoViaje === 'familia' && data.numViajeros > 2
-      ? `\n- Viaje familiar con ${data.numViajeros} personas (probablemente con niños): prioriza destinos seguros con actividades para todas las edades. EVITA destinos de fiesta, vida nocturna o aventura extrema.`
+    // ── Contexto de ocasión especial ─────────────────────────────────────────
+    const ocasionSuggestMap = {
+      'luna-de-miel': 'LUNA DE MIEL — destinos ultra-románticos e íntimos, opciones de hoteles boutique especiales',
+      'aniversario':  'ANIVERSARIO — destinos románticos con experiencias memorables de pareja',
+      'despedida':    'DESPEDIDA DE SOLTERO/A — destinos con buena vida nocturna y actividades de adrenalina grupal',
+      'cumpleanos':   'CUMPLEAÑOS — destinos festivos con buena variedad de actividades grupales',
+      'graduacion':   'GRADUACIÓN — destinos con experiencias premium accesibles para celebrar',
+    };
+    const ocasionCtxSuggest = data.ocasionEspecial && ocasionSuggestMap[data.ocasionEspecial]
+      ? `\n- Ocasión especial: ${ocasionSuggestMap[data.ocasionEspecial]}`
+      : '';
+
+    // ── Contexto de mes de viaje ──────────────────────────────────────────────
+    const mesCtx = data.mesViaje
+      ? `\n- Mes de viaje preferido: ${data.mesViaje.replace('-', ' ')} — considera temporada, clima y precios de esa época`
+      : '';
+
+    // ── Prioridad de gasto ────────────────────────────────────────────────────
+    const prioridadSuggestMap = {
+      'vuelo-directo': 'prefiere destinos con vuelo directo disponible desde su ciudad de origen',
+      'mejor-hotel':   'prioriza destinos con buena oferta hotelera de calidad',
+      'actividades':   'prioriza destinos con abundante oferta de actividades y experiencias',
+      'gastronomia':   'prioriza destinos reconocidos por su gastronomía',
+    };
+    const prioridadCtxSuggest = data.prioridadGasto && data.prioridadGasto !== 'equilibrado' && prioridadSuggestMap[data.prioridadGasto]
+      ? `\n- Preferencia de gasto: ${prioridadSuggestMap[data.prioridadGasto]}`
+      : '';
+
+    // ── Restricción dietaria ──────────────────────────────────────────────────
+    const restriccionSuggestMap = {
+      'vegetariano': 'vegetariano — prioriza destinos con buena oferta vegetariana',
+      'vegano':      'vegano — prioriza destinos con buena cultura plant-based (Asia, Europa occidental)',
+      'sin-gluten':  'sin gluten — evita destinos donde sea difícil comer sin gluten',
+      'halal':       'halal — prioriza destinos con restaurantes halal accesibles',
+    };
+    const restriccionCtxSuggest = data.restriccionDietaria && data.restriccionDietaria !== 'sin-restriccion' && restriccionSuggestMap[data.restriccionDietaria]
+      ? `\n- Alimentación: ${restriccionSuggestMap[data.restriccionDietaria]}`
+      : '';
+
+    // ── Experiencia como viajero ──────────────────────────────────────────────
+    const experienciaCtxSuggest = data.experienciaViajero === 'frecuente'
+      ? '\n- Perfil: viajero frecuente — evita los destinos más obvios y turísticos, propone opciones con más carácter y menos masificadas'
+      : data.experienciaViajero === 'primera-vez'
+      ? '\n- Perfil: primera experiencia viajando — prioriza destinos amigables para viajeros novatos, bien conectados y seguros'
+      : '';
+
+    // ── Familia con niños ─────────────────────────────────────────────────────
+    const numNinos = data.numNinos || 0;
+    const familiaCtx = data.tipoViaje === 'familia' && numNinos > 0
+      ? `\n- Viaje familiar con ${numNinos} niño${numNinos > 1 ? 's' : ''}: prioriza destinos seguros con actividades para todas las edades. EVITA destinos de fiesta, aventura extrema o sin infraestructura familiar.`
       : data.tipoViaje === 'familia'
-        ? `\n- Viaje familiar: prioriza destinos seguros con atracciones para niños y familias.`
+        ? `\n- Viaje familiar: prioriza destinos seguros con atracciones para todas las edades.`
         : '';
 
     const tipoViajeMap = {
-      'solo': 'viajero solo',
-      'pareja': 'pareja',
-      'familia': 'familia',
-      'amigos': 'grupo de amigos'
+      'solo': 'viajero solo', 'pareja': 'pareja', 'familia': 'familia', 'amigos': 'grupo de amigos',
     };
-    
     const tipoViajero = tipoViajeMap[data.tipoViaje] || data.tipoViaje;
 
     // Prompt para generar 3 opciones de destino
-    const prompt = `Eres un experto en viajes. Genera exactamente 3 opciones de destino para este viajero:
+    const prompt = `Eres un experto en viajes. Genera exactamente 3 opciones de destino para este viajero. Las 3 opciones deben ser las MEJORES para su perfil específico — no sigas un formato rígido de tipos, elige lo que realmente encaje mejor.
 
 PERFIL DEL VIAJERO:
 - Origen: ${data.origen}
 - Presupuesto: $${data.presupuesto} USD por persona (incluye vuelos, hotel y actividades)
 - Duración: ${data.dias} días
 - Tipo de viajero: ${tipoViajero} (${data.numViajeros} personas)
-- Intereses: ${interesesTexto}
+- Intereses EN PRIORIDAD: ${interesesTexto}
 - Ritmo preferido: ${ritmoTexto}
-- Alojamiento preferido: ${alojTexto}${familiaCtx}
+- Alojamiento preferido: ${alojTexto}${familiaCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${restriccionCtxSuggest}${experienciaCtxSuggest}
 
-REGLAS PARA LAS OPCIONES:
-1. OPCIÓN 1: Multidestino (2 países o 2 ciudades en países diferentes). Ejemplo: "Roma + París"
-2. OPCIÓN 2: Monopaís multiciudad (2-3 ciudades del mismo país). Ejemplo: "Barcelona + Madrid"
-3. OPCIÓN 3: ${data.dias <= 7 ? 'Destino único (una sola ciudad, ideal para viajes cortos)' : 'Otra combinación multidestino o monopaís diferente a las anteriores'}
-
-IMPORTANTE:
-- El precio estimado debe ser REALISTA considerando vuelos desde ${data.origen} y el tipo de alojamiento preferido (${alojTexto})
-- Si el alojamiento es "Hostal": prioriza destinos populares en la ruta mochilera (Bangkok, Lisboa, Medellín, Berlín, etc.)
-- Si el alojamiento es "B&B": prioriza pueblos y ciudades medianas con encanto (Toscana, Provence, Alentejo, etc.) sobre megalópolis
-- Si el alojamiento es "Airbnb": ciudades con barrios residenciales vivibles y buena conectividad al centro
-- Considera la temporada actual y costos de vida del destino
-- Los destinos deben coincidir con los intereses del viajero
+REGLAS:
+- Variedad: las 3 opciones deben ser destinos diferentes entre sí (diferentes regiones o países)
+- Al menos una opción debe ser multidestino si los días lo permiten (${data.dias >= 7 ? 'los días lo permiten' : 'con cuidado si los días son pocos'})
+- El precio estimado debe ser REALISTA considerando vuelos desde ${data.origen}
+- Los destinos deben coincidir directamente con los intereses priorizados
+- Si hay restricción dietaria, los destinos deben tenerla cubierta
+- Si hay ocasión especial, los destinos deben potenciarla
+- Si el alojamiento es "Hostal": prioriza la ruta mochilera (Bangkok, Lisboa, Medellín, Berlín, etc.)
+- Si es "B&B": ciudades medianas con encanto (Toscana, Provence, Alentejo) sobre megalópolis
 - El presupuesto es por persona
 
 Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:

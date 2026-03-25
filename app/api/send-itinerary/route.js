@@ -38,24 +38,6 @@ function buildConfirmationEmail(formData, itinerario, planLabel, fechaTexto) {
       <p style="margin:4px 0;"><strong>Presupuesto estimado:</strong> ${itinerario.presupuesto_desglose?.total || ''}</p>
     </div>
 
-    ${Array.isArray(itinerario.vuelos) && itinerario.vuelos.length ? `
-    <div style="background:#fff;border:1px solid #FFE0D0;border-radius:12px;padding:20px;margin-bottom:24px;">
-      <h2 style="color:#FF6332;font-size:16px;margin:0 0 12px;">Vuelos recomendados</h2>
-      ${(itinerario.vuelos || []).slice(0, 3).map(v => `
-        <div style="padding:8px 0;border-bottom:1px solid #f5ede8;">
-          <p style="margin:0 0 2px;font-weight:700;font-size:14px;color:#212529;">${v.aerolinea || ''} &mdash; ${v.ruta || ''}</p>
-          <p style="margin:0;color:#888;font-size:12px;">${v.precio_estimado || ''} &nbsp;&middot;&nbsp; ${v.duracion || ''} &nbsp;&middot;&nbsp; ${v.escala || ''}</p>
-        </div>`).join('')}
-      ${itinerario._vuelos_links && itinerario._vuelos_links.google_flights ? `
-      <div style="text-align:center;margin-top:16px;">
-        <a href="${itinerario._vuelos_links.google_flights}"
-           style="display:inline-block;background:#FF6332;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">
-          Ver precios reales en Google Flights
-        </a>
-        <p style="margin:8px 0 0;color:#aaa;font-size:11px;">Precio en el PDF es una estimacion. Al hacer clic veras el precio real para tus fechas.</p>
-      </div>` : ''}
-    </div>` : ''}
-
     <div style="background:#FF6332;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px;">
       <p style="color:#fff;font-size:14px;margin:0 0 8px;">Tu itinerario completo está adjunto como PDF en este correo.</p>
       <p style="color:#fff;font-size:13px;font-style:italic;margin:0;">¿Problemas? Escribinos a <a href="mailto:vive.vivante.ch@gmail.com" style="color:#FFE0D0;">vive.vivante.ch@gmail.com</a></p>
@@ -132,63 +114,6 @@ async function generateItinerarioPdf(itinerario, formData, planLabel) {
     }
 
     // ── Días ──
-
-    // VUELOS RECOMENDADOS
-    if (Array.isArray(itinerario.vuelos) && itinerario.vuelos.length) {
-      content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#ddd' }], margin: [0, 0, 0, 14] });
-      content.push({ text: 'VUELOS RECOMENDADOS', fontSize: 13, bold: true, color: coral, margin: [0, 0, 0, 8] });
-      itinerario.vuelos.forEach(vuelo => {
-        const aeroParts = [
-          { text: (vuelo.aerolinea || '') + '   ', bold: true, fontSize: 11, color: carbon },
-          { text: vuelo.ruta || '', fontSize: 11, color: '#555' },
-        ];
-        content.push({ columns: aeroParts, columnGap: 0, margin: [0, 4, 0, 2] });
-        const detalles = [
-          vuelo.precio_estimado ? 'Est.: ' + vuelo.precio_estimado : null,
-          vuelo.duracion        ? vuelo.duracion                   : null,
-          vuelo.escala          ? vuelo.escala                     : null,
-        ].filter(Boolean).join('   |   ');
-        if (detalles) content.push({ text: detalles, fontSize: 10, color: '#777', margin: [0, 0, 0, 2] });
-        if (vuelo.tip) content.push({ text: 'Tip: ' + vuelo.tip, fontSize: 9, italics: true, color: purple, margin: [0, 0, 0, 6] });
-      });
-      if (itinerario._vuelos_links && itinerario._vuelos_links.google_flights) {
-        content.push({
-          text: 'Ver precios y disponibilidad reales en Google Flights',
-          link: itinerario._vuelos_links.google_flights,
-          color: coral,
-          decoration: 'underline',
-          bold: true,
-          fontSize: 10,
-          margin: [0, 4, 0, 16],
-        });
-      }
-    }
-
-
-    // ALOJAMIENTO RECOMENDADO
-    if (Array.isArray(itinerario.alojamiento) && itinerario.alojamiento.length) {
-      content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#ddd' }], margin: [0, 0, 0, 14] });
-      content.push({ text: 'ALOJAMIENTO RECOMENDADO', fontSize: 13, bold: true, color: coral, margin: [0, 0, 0, 8] });
-      itinerario.alojamiento.forEach(zona => {
-        const zonaNights = zona.noches ? ' (' + zona.noches + ' noches)' : '';
-        content.push({ text: (zona.destino || 'Destino') + zonaNights, fontSize: 11, bold: true, color: carbon, margin: [0, 6, 0, 6] });
-        (zona.opciones || []).forEach(op => {
-          const catColor = op.categoria === 'Premium' ? purple : op.categoria === 'Confort' ? coral : '#888';
-          content.push({
-            columns: [
-              { text: (op.categoria || '').toUpperCase(), fontSize: 9, bold: true, color: catColor, width: 65 },
-              { text: op.plataforma || '', fontSize: 9, color: '#888', width: 80 },
-              { text: op.nombre || '', fontSize: 10, bold: true, color: carbon, width: '*' },
-              { text: op.precio_noche || '', fontSize: 10, color: coral, bold: true, width: 55, alignment: 'right' },
-            ],
-            margin: [0, 2, 0, 1],
-          });
-          if (op.por_que) content.push({ text: op.por_que, fontSize: 9, italics: true, color: purple, margin: [0, 0, 0, 1] });
-          if (op.link)    content.push({ text: 'Buscar disponibilidad en ' + (op.plataforma || 'plataforma'), link: op.link, color: coral, decoration: 'underline', fontSize: 9, margin: [0, 0, 0, 7] });
-        });
-      });
-    }
-
     if (itinerario.dias?.length) {
       content.push({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#ddd' }], margin: [0, 0, 0, 14] });
       content.push({ text: 'ITINERARIO DÍA A DÍA', fontSize: 13, bold: true, color: coral, margin: [0, 0, 0, 10] });
@@ -293,17 +218,8 @@ async function generateItinerarioPdf(itinerario, formData, planLabel) {
     const docDefinition = {
       content,
       defaultStyle: { font: 'Roboto', fontSize: 11, color: carbon },
-      pageMargins: [40, 60, 40, 50],
-      header: (currentPage) => {
-      if (currentPage === 1) return null;
-      return {
-        columns: [
-          { text: 'VIVANTE', fontSize: 8, bold: true, color: carbon, margin: [40, 20, 0, 0] },
-          { text: '', width: '*' },
-        ],
-      };
-    },
-    info: { title: itinerario.titulo || 'Itinerario VIVANTE', author: 'VIVANTE' },
+      pageMargins: [40, 50, 40, 50],
+      info: { title: itinerario.titulo || 'Itinerario VIVANTE', author: 'VIVANTE' },
     };
 
     return await new Promise((resolve, reject) => {
@@ -759,59 +675,6 @@ function getCountryTravelContext(origenStr, destinoStr) {
   return lines.join('\n');
 }
 
-// ============================================================
-// HELPER: Rebuild accommodation links with actual travel dates
-// Called server-side after AI generates the itinerary JSON.
-// ============================================================
-function injectDatesIntoLinks(itinerario, numViajeros) {
-  if (!itinerario || !Array.isArray(itinerario.alojamiento)) return itinerario;
-  const fechaSalida  = (itinerario.resumen?.fecha_salida  || '').trim();
-  const fechaRegreso = (itinerario.resumen?.fecha_regreso || '').trim();
-  if (!fechaSalida) return itinerario;
-  const viajeros = numViajeros || 2;
-  itinerario.alojamiento = itinerario.alojamiento.map(destObj => {
-    if (!destObj.opciones || !Array.isArray(destObj.opciones)) return destObj;
-    const ciudad = encodeURIComponent((destObj.destino || '').split(/[,(-]/)[0].trim());
-    destObj.opciones = destObj.opciones.map(opcion => {
-      const plat = (opcion.plataforma || '').toLowerCase();
-      const oldLink = opcion.link || '';
-      let link = oldLink;
-      if (plat.includes('booking')) {
-        const nflt = oldLink.includes('pt%3D11') ? 'pt%3D11' : 'ht_id%3D204';
-        link = `https://www.booking.com/searchresults.html?ss=${ciudad}&checkin=${fechaSalida}&checkout=${fechaRegreso}&group_adults=${viajeros}&nflt=${nflt}`;
-      } else if (plat.includes('hostelworld')) {
-        link = `https://www.hostelworld.com/pwa#/search?search_keywords=${ciudad}&dateFrom=${fechaSalida}&dateTo=${fechaRegreso}&guests=${viajeros}`;
-      } else if (plat.includes('airbnb')) {
-        link = `https://www.airbnb.com/s/${ciudad}/homes?checkin=${fechaSalida}&checkout=${fechaRegreso}&adults=${viajeros}`;
-      }
-      return { ...opcion, link };
-    });
-    return destObj;
-  });
-  return itinerario;
-}
-
-// ============================================================
-// HELPER: Add Google Flights + Skyscanner search links to vuelos
-// ============================================================
-function injectFlightSearchLinks(itinerario) {
-  if (!itinerario?.resumen) return itinerario;
-  const ori = (itinerario.resumen.origen_iata  || '').toUpperCase().trim();
-  const dst = (itinerario.resumen.destino_iata || '').toUpperCase().trim();
-  const fS  = (itinerario.resumen.fecha_salida  || '').trim();
-  const fR  = (itinerario.resumen.fecha_regreso || '').trim();
-  if (!ori || !dst || !fS || ori.length !== 3 || dst.length !== 3) return itinerario;
-  const fSsk = fS.replace(/-/g, '').substring(2);
-  const fRsk = fR ? fR.replace(/-/g, '').substring(2) : '';
-  itinerario._vuelos_links = {
-    google_flights: `https://www.google.com/travel/flights?q=Flights+from+${ori}+to+${dst}+on+${fS}` + (fR ? `+return+${fR}` : ''),
-    skyscanner: fR
-      ? `https://www.skyscanner.com/transport/flights/${ori.toLowerCase()}/${dst.toLowerCase()}/${fSsk}/${fRsk}/`
-      : `https://www.skyscanner.com/transport/flights/${ori.toLowerCase()}/${dst.toLowerCase()}/${fSsk}/`,
-  };
-  return itinerario;
-}
-
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -864,6 +727,92 @@ DEBES:
 3. En presupuesto_desglose.total NO superar $${presupuesto * 1.1} USD.
 4. Si el presupuesto solo alcanza para el pasaje (menos de $${Math.round(umbralMin * 0.4)} USD), indicarlo claramente y sugerir destinos alternativos más económicos.` : '';
 
+    // ── Intereses con orden de prioridad ─────────────────────────────────────
+    const interesesArray = Array.isArray(formData.intereses) ? formData.intereses : [];
+    const interesNombres = {
+      playa: 'Playa y mar', cultura: 'Cultura e historia', aventura: 'Aventura y deportes extremos',
+      gastronomia: 'Gastronomía', relax: 'Relax y bienestar', naturaleza: 'Naturaleza y paisajes',
+      nocturna: 'Vida nocturna', deporte: 'Deportes', shopping: 'Shopping',
+    };
+    const interesesConPeso = interesesArray.length > 0
+      ? interesesArray.map((id, idx) => {
+          const pesos = ['PRINCIPAL (60% actividades)', 'SECUNDARIO (25%)', 'COMPLEMENTARIO (10%)', 'OCASIONAL (5%)'];
+          return `${interesNombres[id] || id} [${pesos[idx] || 'ocasional'}]`;
+        }).join(', ')
+      : 'cultura, gastronomía';
+
+    // ── Ocasión especial ──────────────────────────────────────────────────────
+    const ocasionDescMap = {
+      'luna-de-miel':  'LUNA DE MIEL 💍 — es el viaje más importante de su vida juntos. Cada detalle importa: actividades privadas e íntimas, cenas con vista excepcional, suite o habitación superior (avisa al hotel para posibles upgrades y detalles de bienvenida), momentos sorpresa planificados. Tono del texto: poético, íntimo, emocionante.',
+      'aniversario':   'ANIVERSARIO 💕 — celebración romántica de pareja. Al menos una cena o experiencia especialmente memorable. Mix de actividades íntimas con algo único para festejar la fecha. Tono: cálido y celebratorio.',
+      'cumpleanos':    'CUMPLEAÑOS 🎂 — viaje de celebración. Incluye al menos una experiencia o cena especial para el festejo. Tono festivo y energético.',
+      'despedida':     'DESPEDIDA DE SOLTERO/A 🎉 — grupo en modo celebración. Prioriza actividades grupales con adrenalina y diversión, al menos 2 noches de vida nocturna destacadas, restaurantes con mesas grandes y ambiente animado. Tono: enérgico, divertido, con humor.',
+      'graduacion':    'GRADUACIÓN 🎓 — celebración de logro importante. Al menos una experiencia premium memorable. Tono orgulloso y celebratorio.',
+    };
+    const ocasionCtx = formData.ocasionEspecial && ocasionDescMap[formData.ocasionEspecial]
+      ? `\n- OCASIÓN ESPECIAL: ${ocasionDescMap[formData.ocasionEspecial]}`
+      : '';
+
+    // ── Restricción alimentaria ───────────────────────────────────────────────
+    const restriccionDescMap = {
+      'vegetariano': 'VEGETARIANO — TODOS los restaurantes recomendados DEBEN tener opciones vegetarianas claras. Menciona los platos vegetarianos específicos. Evita restaurantes cuya especialidad sea exclusivamente carne o mariscos.',
+      'vegano':      'VEGANO — TODOS los restaurantes DEBEN tener opciones veganas verificadas. Prioriza locales con menú plant-based dedicado. Menciona platos veganos específicos disponibles.',
+      'sin-gluten':  'SIN GLUTEN — TODOS los restaurantes deben tener opciones sin gluten claramente identificadas. Agrega en tips_culturales cómo comunicar la restricción en el idioma local.',
+      'halal':       'HALAL — prioriza restaurantes con certificación halal o sin alcohol/cerdo. Incluye en tips_culturales cómo identificar opciones halal en el destino.',
+    };
+    const restriccionCtx = formData.restriccionDietaria && formData.restriccionDietaria !== 'sin-restriccion' && restriccionDescMap[formData.restriccionDietaria]
+      ? `\n- RESTRICCIÓN ALIMENTARIA: ${restriccionDescMap[formData.restriccionDietaria]}`
+      : '';
+
+    // ── Horario preferido ─────────────────────────────────────────────────────
+    const horarioDescMap = {
+      'madrugador': 'MADRUGADOR — el viajero arranca a las 7am. Actividades de mañana desde las 7-8h (ventaja: atracciones antes de multitudes). Incluye desayunos tempranos. Los días terminan relativamente temprano.',
+      'nocturno':   'NOCTÁMBULO — no programes nada antes de las 11am. Mañana libre o de descanso. La tarde y noche son el peak de actividad. Incluye opciones de brunch en lugar de desayuno. Los días se extienden hasta tarde.',
+    };
+    const horarioCtx = formData.horarioPreferido && horarioDescMap[formData.horarioPreferido]
+      ? `\n- HORARIO PREFERIDO: ${horarioDescMap[formData.horarioPreferido]}`
+      : '';
+
+    // ── Aerolínea preferida / programa de millas ──────────────────────────────
+    const aerolineaDescMap = {
+      latam:     'LATAM (LATAM Pass)',
+      avianca:   'Avianca (LifeMiles)',
+      copa:      'Copa Airlines (ConnectMiles)',
+      american:  'American Airlines (AAdvantage)',
+      united:    'United Airlines (MileagePlus)',
+    };
+    const aerolineaCtx = formData.aerolineaPreferida && aerolineaDescMap[formData.aerolineaPreferida]
+      ? `\n- AEROLÍNEA PREFERIDA/MILLAS: ${aerolineaDescMap[formData.aerolineaPreferida]} — si opera la ruta y tiene precio competitivo (máx 20% más caro que la opción más barata), ponla como PRIMERA opción en el array de vuelos.`
+      : '';
+
+    // ── Prioridad de gasto ────────────────────────────────────────────────────
+    const prioridadDescMap = {
+      'vuelo-directo': 'PRIORIDAD VUELO DIRECTO — el viajero prefiere pagar más por vuelo directo. Pon SIEMPRE el vuelo directo como primera opción si existe, aunque sea más caro. Asigna mayor proporción del presupuesto_desglose a vuelos.',
+      'mejor-hotel':   'PRIORIDAD ALOJAMIENTO — prefiere el mejor hotel posible aunque el vuelo tenga escala. Asigna 40-45% del presupuesto_desglose a alojamiento. Presenta la opción Premium con más detalle y como primera recomendación.',
+      'actividades':   'PRIORIDAD EXPERIENCIAS — quiere invertir en actividades y tours únicos, alojamiento funcional es suficiente. Asigna 25-30% del presupuesto_desglose a actividades. Incluye más opciones de experiencias premium.',
+      'gastronomia':   'PRIORIDAD GASTRONOMÍA — quiere comer excepcionalmente bien, alojamiento funcional está bien. Asigna 25-30% a comidas. Cada almuerzo y cena debe ser una recomendación cuidadosamente elegida. Incluye experiencias gastronómicas (mercados gourmet, cenas con chef, tours de comida).',
+    };
+    const prioridadCtx = formData.prioridadGasto && formData.prioridadGasto !== 'equilibrado' && prioridadDescMap[formData.prioridadGasto]
+      ? `\n- DISTRIBUCIÓN DE PRESUPUESTO: ${prioridadDescMap[formData.prioridadGasto]}`
+      : '';
+
+    // ── Primera visita / experiencia viajero ──────────────────────────────────
+    const primeraVisitaCtx = formData.primeraVisita === true
+      ? '\n- PRIMERA VEZ EN EL DESTINO: incluye los imperdibles clásicos que todo primer visitante debe conocer. Equilibra íconos turísticos con experiencias auténticas. Explica contexto básico de cada lugar.'
+      : formData.primeraVisita === false
+      ? '\n- YA CONOCE EL DESTINO: PROHIBIDO recomendar atracciones turísticas obvias como actividades principales. Barrios alternativos, restaurantes locales sin menú en inglés, experiencias genuinamente locales. Mezcla clásicos menos visitados con descubrimientos fuera de guías.'
+      : formData.experienciaViajero === 'frecuente'
+      ? '\n- VIAJERO FRECUENTE: evita lo turístico y obvio. Prioriza experiencias off the beaten path, locales auténticos, perspectivas que un viajero experimentado valora. Asume conocimiento básico de viajes internacionales.'
+      : formData.experienciaViajero === 'primera-vez'
+      ? '\n- PERFIL NOVATO: primera experiencia viajando a este tipo de destino. Más contexto explicativo, tips prácticos básicos, y los imperdibles que no puede perderse. Tono guía y orientador.'
+      : '';
+
+    // ── Movilidad reducida ────────────────────────────────────────────────────
+    const movilidadCtx = formData.movilidadReducida
+      ? '\n- MOVILIDAD REDUCIDA: alguien en el grupo tiene movilidad reducida. TODAS las actividades deben ser accesibles (sin escaleras largas, terrenos irregulares ni distancias a pie extensas). Menciona accesibilidad en cada actividad. Prioriza transporte con opciones accesibles y alojamiento con habitaciones adaptadas.'
+      : '';
+
+    // ── clienteCtx completo ───────────────────────────────────────────────────
     const clienteCtx = `
 DATOS DEL CLIENTE:
 - Nombre: ${formData.nombre}
@@ -871,15 +820,17 @@ DATOS DEL CLIENTE:
 - Origen: ${formData.origen || 'Santiago, Chile'}
 - Presupuesto: $${presupuesto >= 15000 ? '15.000+' : presupuesto} USD por persona (TOTAL para TODO el viaje: vuelos + alojamiento + comidas + actividades)
 - Duración: ${dias} días
-- Tipo de viajero: ${formData.tipoViaje || 'pareja'}
-- Número de viajeros: ${formData.numViajeros || 2}
-- Intereses: ${Array.isArray(formData.intereses) ? formData.intereses.join(', ') : (formData.intereses || 'cultura, gastronomía')}
+- Tipo de viajero: ${formData.tipoViaje || 'pareja'}${formData.ocasionEspecial && formData.ocasionEspecial !== 'sin-ocasion' ? ` — ${formData.ocasionEspecial.replace(/-/g, ' ')}` : ''}
+- Número de viajeros: ${formData.numViajeros || 2}${formData.tipoViaje === 'familia' && (formData.numNinos || 0) > 0 ? ` (${formData.numNinos} niño${formData.numNinos > 1 ? 's' : ''} + ${(formData.numViajeros || 2) - (formData.numNinos || 0)} adulto${(formData.numViajeros || 2) - (formData.numNinos || 0) !== 1 ? 's' : ''})` : ''}
+- Intereses EN ORDEN DE PRIORIDAD: ${interesesConPeso}
 - Ritmo: ${formData.ritmo <= 2 ? 'Relajado (max 2 actividades/día)' : formData.ritmo <= 3 ? 'Moderado (2-3 actividades)' : 'Intenso (3-4 actividades)'}
-- Alojamiento preferido: ${formData.alojamiento || 'hotel'}
-${formData.tipoViaje === 'familia' && (formData.numNinos > 0) ? `- Niños en el grupo: ${formData.numNinos} niño${formData.numNinos > 1 ? 's' : ''} (de los ${formData.numViajeros || 2} viajeros totales). Adapta actividades, restaurantes y ritmo para niños.` : formData.tipoViaje === 'familia' && (formData.numViajeros || 2) > 2 ? `- Composición del grupo: ${formData.numViajeros} personas (adultos + niños estimados: ${(formData.numViajeros || 2) - 2}). Planifica con ritmo familiar y actividades para todas las edades.` : ''}
+- Alojamiento preferido: ${formData.alojamiento || 'hotel'}${ocasionCtx}${restriccionCtx}${horarioCtx}${aerolineaCtx}${prioridadCtx}${primeraVisitaCtx}${movilidadCtx}
 ${budgetWarning}
 Hoy es ${today}. Los precios, vuelos y datos de alojamiento deben ser realistas para esta fecha.
-Para fecha_salida y fecha_regreso: propón fechas REALES en formato YYYY-MM-DD, mínimo 6-8 semanas desde hoy (${today}), en temporada ideal para el destino. fecha_regreso = fecha_salida + ${dias} días.
+${formData.mesViaje
+  ? `FECHAS: el viajero quiere viajar en ${formData.mesViaje.replace('-', ' ')}. Propón fecha_salida y fecha_regreso REALES en ese mes en formato YYYY-MM-DD. fecha_regreso = fecha_salida + ${dias} días. Si ese mes es temporada alta en el destino, mencionarlo en resumen.distribucion con el impacto real en precios.`
+  : `Para fecha_salida y fecha_regreso: propón fechas REALES en formato YYYY-MM-DD, mínimo 6-8 semanas desde hoy (${today}), en temporada ideal para el destino. fecha_regreso = fecha_salida + ${dias} días.`
+}
 Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto principal.`;
 
     // ── Detección de viaje doméstico ─────────────────────────────────────────
@@ -911,23 +862,55 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
     // hotel → Eco=Airbnb, Mid=Booking.com, Prem=Booking.com
     // airbnb → todo Airbnb | hostal → todo Hostelworld | bnb → todo Booking.com
     const alojPref   = formData.alojamiento || 'hotel';
-    const interesStr = Array.isArray(formData.intereses) ? formData.intereses.join(', ') : (formData.intereses || 'cultura, gastronomía');
+    const interesStr = interesesConPeso; // ya calculado con pesos/prioridad
     const tipoViaje  = (formData.tipoViaje || 'pareja').toLowerCase();
+    const ocasion = (formData.ocasionEspecial || '').toLowerCase();
     const tipoViajeRule = tipoViaje === 'familia'
-      ? `- TIPO DE VIAJE: FAMILIA. Adapta TODO el itinerario para viaje familiar: (1) Actividades aptas para niños de distintas edades (zoológicos, parques de diversiones, playas seguras, museos interactivos). (2) Restaurantes con menú infantil y mesas amplias. (3) Alojamiento con habitaciones familiares o conectadas. (4) Ritmo más tranquilo con descansos y opciones de backup si los niños se cansan. (5) Evita actividades de alto riesgo o exclusivas para adultos. (6) ${(formData.numNinos || 0) > 0 ? `Hay ${formData.numNinos} niño${formData.numNinos > 1 ? 's' : ''} en el grupo` : 'Puede haber niños (numViajeros > 2)'} — incluye parques temáticos, actividades acuáticas o museos interactivos específicos del destino. Tono del texto: cálido, familiar y considerado con todas las edades.`
+      ? (() => {
+          const numNinos = formData.numNinos || 0;
+          const ninosCtxStr = numNinos > 0
+            ? `Hay ${numNinos} niño${numNinos > 1 ? 's' : ''} en el grupo — actividades aptas para su edad, restaurantes con menú infantil, ritmo con descansos obligatorios.`
+            : 'Grupo familiar adulto — actividades tranquilas aptas para todas las edades.';
+          const movilStr = formData.movilidadReducida ? ' Verifica accesibilidad en cada actividad (sin escaleras largas, terrenos llanos).' : '';
+          return `- TIPO DE VIAJE: FAMILIA. ${ninosCtxStr}${movilStr} Reglas: (1) Actividades aptas para niños (zoológicos, playas seguras, museos interactivos, parques naturales). (2) Restaurantes con menú infantil y mesas amplias. (3) Alojamiento con habitaciones familiares o conectadas. (4) Evita actividades de riesgo o exclusivas para adultos. Tono: cálido, considerado con todas las edades.`;
+        })()
       : tipoViaje === 'pareja'
-        ? `- TIPO DE VIAJE: PAREJA. Adapta TODO el itinerario para viaje romántico: (1) Experiencias íntimas (cenas con vista, paseos al atardecer, spas, tours privados). (2) Restaurantes con ambiente romántico (no bulliciosos). (3) Alojamiento con opción de habitación doble especial o suite. (4) Actividades en pareja (clases de cocina para dos, paseos en bote, miradores). Tono del texto: cálido, evocador y romántico.`
+        ? ocasion === 'luna-de-miel'
+          ? `- TIPO DE VIAJE: LUNA DE MIEL 💍. Es el viaje más importante de su vida. TODO debe ser íntimo, privado y memorable: (1) Actividades privadas para dos (tours privados, spa de pareja, clases de cocina juntos). (2) Cenas con vista excepcional y ambiente romántico — no restaurantes bulliciosos. (3) Alojamiento: suite o habitación superior — menciona explícitamente que avisen al hotel para posibles upgrades y detalles de bienvenida. (4) Planifica al menos un momento sorpresa o especial por día. Tono del texto: poético, íntimo, emocionante — cada descripción debe sentirse única.`
+          : ocasion === 'aniversario'
+          ? `- TIPO DE VIAJE: ANIVERSARIO 💕. Celebración romántica: (1) Al menos una cena o experiencia excepcionalmente memorable. (2) Mix de actividades íntimas con algo único para la fecha. (3) Alojamiento con habitación doble especial o suite. Tono: cálido, evocador y celebratorio.`
+          : `- TIPO DE VIAJE: PAREJA. Adapta TODO para viaje romántico: (1) Experiencias íntimas (cenas con vista, paseos al atardecer, spas, tours privados). (2) Restaurantes con ambiente romántico (no bulliciosos). (3) Alojamiento con habitación doble especial o suite. (4) Actividades en pareja (clases de cocina para dos, paseos en bote, miradores). Tono: cálido, evocador y romántico.`
         : tipoViaje === 'solo'
-          ? `- TIPO DE VIAJE: VIAJERO SOLO. Adapta TODO el itinerario para viaje individual: (1) Tours grupales (excelente para conocer gente). (2) Cafés con ambiente tranquilo para trabajar o leer. (3) Experiencias sociales y hostales con zonas comunes. (4) Énfasis en seguridad: zonas seguras, apps de transporte, contactos de emergencia. (5) Consejos sobre cómo moverse solo en el destino. Tono del texto: empoderador y práctico.`
+          ? `- TIPO DE VIAJE: VIAJERO SOLO. Adapta TODO para viaje individual: (1) Tours grupales (ideales para conocer gente). (2) Cafés con ambiente tranquilo. (3) Experiencias sociales y hostales con zonas comunes. (4) Énfasis en seguridad: zonas seguras, apps de transporte, contactos de emergencia. (5) Consejos sobre cómo moverse solo. Tono: empoderador y práctico.`
           : tipoViaje === 'amigos'
-            ? `- TIPO DE VIAJE: GRUPO DE AMIGOS. Adapta TODO el itinerario para grupo: (1) Actividades grupales (deportes de aventura, tours en grupo, vida nocturna). (2) Restaurantes con mesas grandes y ambiente animado. (3) Alojamiento tipo Airbnb casa completa o habitaciones múltiples en hotel/hostal. (4) Actividades de adrenalina y diversión colectiva. Tono del texto: energético, jovial y con humor.`
+            ? ocasion === 'despedida'
+              ? `- TIPO DE VIAJE: DESPEDIDA DE SOLTERO/A 🎉. Grupo en modo celebración: (1) Actividades grupales con adrenalina y diversión (aventura, deportes, experiencias únicas). (2) Al menos 2 noches de vida nocturna destacadas. (3) Restaurantes con mesas grandes y ambiente festivo. (4) Alguna actividad memorable para el/la protagonista. (5) Alojamiento tipo Airbnb casa completa. Tono: enérgico, divertido, con humor.`
+              : ocasion === 'cumpleanos'
+              ? `- TIPO DE VIAJE: CUMPLEAÑOS EN GRUPO 🎂. Al menos una actividad o cena especial para el festejo. Sugerencias para hacer el día memorable. Restaurantes con ambiente festivo. Tono: jovial y celebratorio.`
+              : `- TIPO DE VIAJE: GRUPO DE AMIGOS. Adapta TODO para grupo: (1) Actividades grupales (aventura, tours, vida nocturna). (2) Restaurantes con mesas grandes y ambiente animado. (3) Alojamiento tipo Airbnb casa completa o habitaciones múltiples. (4) Actividades de adrenalina y diversión colectiva. Tono: energético, jovial y con humor.`
             : tipoViaje.includes('empresa') || tipoViaje.includes('corporat') || tipoViaje.includes('negocio')
-              ? `- TIPO DE VIAJE: GRUPO EMPRESARIAL. Adapta el itinerario: (1) Hoteles de negocios con sala de reuniones y WiFi rápido. (2) Restaurantes apropiados para cenas de trabajo. (3) Opciones de team building y actividades grupales. (4) Transporte eficiente y servicio ejecutivo. Tono del texto: profesional pero cercano.`
+              ? `- TIPO DE VIAJE: GRUPO EMPRESARIAL. (1) Hoteles de negocios con sala de reuniones y WiFi rápido. (2) Restaurantes apropiados para cenas de trabajo. (3) Opciones de team building. (4) Transporte eficiente y servicio ejecutivo. Tono: profesional pero cercano.`
               : `- TIPO DE VIAJE: ${tipoViaje}. Adapta el itinerario para este perfil de viajero.`;
+
+    // ── Reglas de personalización adicionales (nuevos campos del form) ────────
+    const reglasPersonalizacion = [
+      // Intereses con pesos
+      `- INTERESES CON PRIORIDAD: ${interesesConPeso}. El primer interés es el PRINCIPAL — el 60% de las actividades del día a día deben girar en torno a él. El segundo es secundario (25%). El tercero es complementario (10%). El cuarto es ocasional cuando encaje. Mapeo obligatorio → gastronomia: mercados, clases de cocina, tours gastronómicos, degustaciones; aventura: senderismo, deportes extremos, kayak, rafting, zipline; playa: playas, snorkeling, surf, buceo; cultura: museos, sitios históricos, arte local, barrios históricos; naturaleza: parques nacionales, cascadas, reservas naturales; nocturna: bares de moda, rooftops, tours nocturnos, clubes. Las actividades NO pueden contradecir los intereses elegidos.`,
+      // Restricción dietaria
+      restriccionCtx ? `- ALIMENTACIÓN: ${restriccionDescMap[formData.restriccionDietaria]}` : '',
+      // Horario preferido
+      horarioCtx ? `- HORARIOS DEL DÍA: ${horarioDescMap[formData.horarioPreferido]}` : '',
+      // Aerolínea preferida
+      aerolineaCtx ? `- AEROLÍNEA PREFERIDA: ${aerolineaDescMap[formData.aerolineaPreferida]} — si opera la ruta a precio competitivo (máx 20% más cara que la opción más económica), ponla como PRIMERA opción en el array de vuelos.` : '',
+      // Prioridad de gasto
+      prioridadCtx ? `- PRIORIDAD DE GASTO: ${prioridadDescMap[formData.prioridadGasto]}` : '',
+      // Primera visita
+      primeraVisitaCtx ? primeraVisitaCtx.replace('\n- ', '- ') : '',
+    ].filter(Boolean).join('\n');
 
     // ── Regla ALOJAMIENTO según preferencia ─────────────────────────────────
     const alojRule = alojPref === 'hostal'
-      ? `- ALOJAMIENTO: El cliente eligió HOSTALES. Las 3 opciones (Económico, Confort, Premium) DEBEN ser hostales/albergues reales con nombre verificable en Hostelworld. PROHIBIDO recomendar hoteles de cadena (Hilton, Marriott, Ibis, etc.) ni Airbnb. Las 3 plataformas son TODAS "Hostelworld". Busca hostales reales en el destino. IMPORTANTE: En el campo destino del objeto alojamiento usa el nombre de la ciudad en INGLES para mejor compatibilidad con Hostelworld (Bangkok, Prague, Lisbon, Rome, Vienna, etc).`
+      ? `- ALOJAMIENTO: El cliente eligió HOSTALES. Las 3 opciones (Económico, Confort, Premium) DEBEN ser hostales/albergues reales con nombre verificable en Hostelworld. PROHIBIDO recomendar hoteles de cadena (Hilton, Marriott, Ibis, etc.) ni Airbnb. Las 3 plataformas son TODAS "Hostelworld". Busca hostales reales en el destino.`
       : alojPref === 'airbnb'
         ? `- ALOJAMIENTO: El cliente eligió AIRBNB. Las 3 opciones deben ser propiedades reales en Airbnb (apartamentos, casas, estudios). SIEMPRE incluye EXACTAMENTE 3 opciones por ciudad: Económico, Confort y Premium. Nunca menos de 3.`
         : alojPref === 'bnb'
@@ -950,13 +933,13 @@ Para origen_iata y destino_iata: código IATA de 3 letras del aeropuerto princip
       ? 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS&nflt=pt%3D11'
       : 'https://www.booking.com/searchresults.html?ss=CIUDAD&group_adults=VIAJEROS&nflt=ht_id%3D204';
     const linkEco  = platEco  === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
-                   : platEco  === 'Hostelworld'   ? 'https://www.hostelworld.com/pwa#/search?search_keywords=CIUDAD'
+                   : platEco  === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
                    : bookingUrl;
     const linkMid  = platMid  === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
-                   : platMid  === 'Hostelworld'   ? 'https://www.hostelworld.com/pwa#/search?search_keywords=CIUDAD'
+                   : platMid  === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
                    : bookingUrl;
     const linkPrem = platPrem === 'Airbnb'       ? 'https://www.airbnb.com/s/CIUDAD/homes'
-                   : platPrem === 'Hostelworld'   ? 'https://www.hostelworld.com/pwa#/search?search_keywords=CIUDAD'
+                   : platPrem === 'Hostelworld'   ? 'https://www.hostelworld.com/search?search_keywords=CIUDAD'
                    : bookingUrl;
 
     const alojamientoSchema = `
@@ -1050,8 +1033,8 @@ ${alojRule}
 - RESTAURANTES: Si el viaje se concentra en UNA SOLA ciudad y dura más de 7 días, incluye 5 restaurantes para esa ciudad. Para viajes multi-ciudad o de 7 días o menos, incluye exactamente 3 restaurantes por ciudad visitada.
 - PRESUPUESTO: El presupuesto indicado ($${presupuesto} USD) es el TOTAL por persona para TODO el viaje. El campo presupuesto_desglose.total NO debe superar ese valor. Adapta vuelos, alojamiento y actividades a esa realidad. Si el presupuesto es insuficiente para el destino elegido, usa el campo resumen.ritmo para incluir una nota como "⚠️ Presupuesto ajustado — hemos optimizado el itinerario para sacar el máximo con tu presupuesto."
 ${diasRule}
-- RITMO: El cliente eligió ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el número de actividades por día: ritmo 1-2 = máximo 2 actividades por día (días relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por día con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por día, días aprovechados al máximo. NO incluyas más actividades de las correspondientes aunque el destino lo permita. El ritmo también afecta el tono: ritmo bajo = más descripción contemplativa, ritmo alto = más dinámico y energético.
-- INTERESES: El cliente eligió: ${interesStr}. TODAS las actividades del día a día DEBEN relacionarse con estos intereses. Mapeo obligatorio → "gastronomia": mercados de comida, clases de cocina, tours gastronómicos, degustaciones; "aventura": senderismo, deportes extremos, escalada, kayak, rafting, zipline; "playa": playas, snorkeling, surf, buceo, paseos en barco; "cultura": museos, sitios históricos, arquitectura, arte local, barrios históricos; "naturaleza": parques nacionales, cascadas, reservas naturales, avistamiento de fauna; "vida nocturna": bares de moda, rooftops, tours nocturnos, clubes. Las actividades del día a día NO pueden contradecir los intereses elegidos (ej: si eligió gastronomía, no pongas excursiones a montañas si no hay relación gastronómica).
+- RITMO: El cliente eligió ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el número de actividades por día: ritmo 1-2 = máximo 2 actividades por día (días relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por día con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por día, días aprovechados al máximo. El ritmo también afecta el tono: ritmo bajo = más descripción contemplativa, ritmo alto = más dinámico y energético.
+${reglasPersonalizacion}
 ${tipoViajeRule}
 - AEROLÍNEAS: SOLO recomienda aerolíneas de esta lista verificada: LATAM, JetSmart, Sky Airline, Avianca, Copa Airlines, Aerolíneas Argentinas, Aeroméxico, GOL, Azul, American Airlines, United Airlines, Delta, Air Canada, WestJet, Iberia, Iberia Express, Air Europa, Turkish Airlines, Air France, KLM, Lufthansa, Swiss, Austrian Airlines, British Airways, TAP Portugal, Norwegian, EasyJet, Ryanair, Finnair, ITA Airways, Qatar Airways, Emirates, Ethiopian Airlines, Japan Airlines, ANA, Singapore Airlines, Cathay Pacific, Korean Air, Asiana, Thai Airways, Malaysia Airlines, Air New Zealand, EVA Air, China Airlines. NO recomiendes aerolíneas que no estén en esta lista.
 ${geoRule}${domesticRule ? '\n' + domesticRule : ''}${checklistRule ? '\n' + checklistRule : ''}
@@ -1181,8 +1164,8 @@ ${alojRule}
 - RESTAURANTES: Si el viaje se concentra en UNA SOLA ciudad y dura más de 7 días, incluye 5 restaurantes para esa ciudad. Para viajes multi-ciudad o de 7 días o menos, incluye exactamente 3 restaurantes por ciudad visitada.
 - PRESUPUESTO: El presupuesto indicado ($${presupuesto} USD) es el TOTAL por persona para TODO el viaje. El campo presupuesto_desglose.total NO debe superar ese valor. Adapta todas las recomendaciones (vuelos, alojamiento, actividades, restaurantes) a esa realidad. Si el presupuesto es insuficiente para el destino elegido, usa resumen.ritmo para incluir una nota como "⚠️ Presupuesto ajustado — optimizamos el itinerario para sacar el máximo con tu presupuesto."
 ${diasRule}
-- RITMO: El cliente eligió ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el número de actividades por día: ritmo 1-2 = máximo 2 actividades por día (días relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por día con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por día, días aprovechados al máximo. NO incluyas más actividades de las correspondientes aunque el destino lo permita. El ritmo también afecta el tono: ritmo bajo = más descripción contemplativa, ritmo alto = más dinámico y energético.
-- INTERESES: El cliente eligió: ${interesStr}. TODAS las actividades del día a día DEBEN relacionarse con estos intereses. Mapeo obligatorio → "gastronomia": mercados de comida, clases de cocina, tours gastronómicos, degustaciones; "aventura": senderismo, deportes extremos, escalada, kayak, rafting, zipline; "playa": playas, snorkeling, surf, buceo, paseos en barco; "cultura": museos, sitios históricos, arquitectura, arte local, barrios históricos; "naturaleza": parques nacionales, cascadas, reservas naturales, avistamiento de fauna; "vida nocturna": bares de moda, rooftops, tours nocturnos, clubes. Las actividades del día a día NO pueden contradecir los intereses elegidos.
+- RITMO: El cliente eligió ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el número de actividades por día: ritmo 1-2 = máximo 2 actividades por día (días relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por día con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por día, días aprovechados al máximo. El ritmo también afecta el tono: ritmo bajo = más descripción contemplativa, ritmo alto = más dinámico y energético.
+${reglasPersonalizacion}
 ${tipoViajeRule}
 - AEROLÍNEAS: SOLO recomienda aerolíneas de esta lista verificada: LATAM, JetSmart, Sky Airline, Avianca, Copa Airlines, Aerolíneas Argentinas, Aeroméxico, GOL, Azul, American Airlines, United Airlines, Delta, Air Canada, WestJet, Iberia, Iberia Express, Air Europa, Turkish Airlines, Air France, KLM, Lufthansa, Swiss, Austrian Airlines, British Airways, TAP Portugal, Norwegian, EasyJet, Ryanair, Finnair, ITA Airways, Qatar Airways, Emirates, Ethiopian Airlines, Japan Airlines, ANA, Singapore Airlines, Cathay Pacific, Korean Air, Asiana, Thai Airways, Malaysia Airlines, Air New Zealand, EVA Air, China Airlines. NO recomiendes aerolíneas fuera de esta lista.
 ${geoRule}
@@ -1517,8 +1500,6 @@ IMPORTANTE sobre dias_pro: para CADA día del viaje (${formData.dias} días), in
             if (!emailRes.ok) console.error('Resend Pro email error:', await emailRes.text());
           }
 
-          injectDatesIntoLinks(mergedItinerary, formData.numViajeros);
-          injectFlightSearchLinks(mergedItinerary);
           return NextResponse.json({ itinerario: mergedItinerary, planId });
         }
       }
@@ -1616,8 +1597,6 @@ IMPORTANTE sobre dias_pro: para CADA día del viaje (${formData.dias} días), in
 
       if (!parsed) throw new Error('No valid JSON found');
       itinerario = parsed;
-      itinerario = injectDatesIntoLinks(itinerario, formData.numViajeros);
-      itinerario = injectFlightSearchLinks(itinerario);
       console.log('Itinerario parseado OK. Secciones:', Object.keys(itinerario).join(', '));
     } catch (e) {
       console.error('JSON parse error:', e.message);
