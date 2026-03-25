@@ -759,6 +759,7 @@ DEBES:
       'vegano':      'VEGANO — TODOS los restaurantes DEBEN tener opciones veganas verificadas. Prioriza locales con menú plant-based dedicado. Menciona platos veganos específicos disponibles.',
       'sin-gluten':  'SIN GLUTEN — TODOS los restaurantes deben tener opciones sin gluten claramente identificadas. Agrega en tips_culturales cómo comunicar la restricción en el idioma local.',
       'halal':       'HALAL — prioriza restaurantes con certificación halal o sin alcohol/cerdo. Incluye en tips_culturales cómo identificar opciones halal en el destino.',
+      'pescetariano': 'PESCETARIANO — come pescado y mariscos pero NO carne roja ni pollo. TODOS los restaurantes DEBEN tener opciones con pescado/mariscos o vegetarianas. Especifica qué platos con mariscos o pescado están disponibles.',
     };
     const restriccionCtx = formData.restriccionDietaria && formData.restriccionDietaria !== 'sin-restriccion' && restriccionDescMap[formData.restriccionDietaria]
       ? `\n- RESTRICCIÓN ALIMENTARIA: ${restriccionDescMap[formData.restriccionDietaria]}`
@@ -796,20 +797,37 @@ DEBES:
       ? `\n- DISTRIBUCIÓN DE PRESUPUESTO: ${prioridadDescMap[formData.prioridadGasto]}`
       : '';
 
-    // ── Primera visita / experiencia viajero ──────────────────────────────────
-    const primeraVisitaCtx = formData.primeraVisita === true
-      ? '\n- PRIMERA VEZ EN EL DESTINO: incluye los imperdibles clásicos que todo primer visitante debe conocer. Equilibra íconos turísticos con experiencias auténticas. Explica contexto básico de cada lugar.'
-      : formData.primeraVisita === false
-      ? '\n- YA CONOCE EL DESTINO: PROHIBIDO recomendar atracciones turísticas obvias como actividades principales. Barrios alternativos, restaurantes locales sin menú en inglés, experiencias genuinamente locales. Mezcla clásicos menos visitados con descubrimientos fuera de guías.'
-      : formData.experienciaViajero === 'frecuente'
-      ? '\n- VIAJERO FRECUENTE: evita lo turístico y obvio. Prioriza experiencias off the beaten path, locales auténticos, perspectivas que un viajero experimentado valora. Asume conocimiento básico de viajes internacionales.'
-      : formData.experienciaViajero === 'primera-vez'
-      ? '\n- PERFIL NOVATO: primera experiencia viajando a este tipo de destino. Más contexto explicativo, tips prácticos básicos, y los imperdibles que no puede perderse. Tono guía y orientador.'
+    // ── Perfil de viajero (3 niveles) ────────────────────────────────────────
+    const esExperto = formData.primeraVisita === false || formData.experienciaViajero === 'frecuente';
+    const esIntermedio = !esExperto && formData.experienciaViajero === 'algunas-veces';
+    const esNovato = formData.primeraVisita === true || formData.experienciaViajero === 'primera-vez';
+
+    const primeraVisitaCtx = esExperto
+      ? `
+- PERFIL EXPLORADOR EXPERTO — YA CONOCE EL DESTINO Y/O VIAJERO FRECUENTE: Esta regla es la más importante del itinerario y PREVALECE sobre cualquier otra lógica.
+  ESTRICTAMENTE PROHIBIDO como actividades principales: los top-10 turísticos masivos del destino (Eiffel en París, Colosseum en Roma, Sagrada Família en Barcelona, Big Ben en Londres, etc.). Si aparecen, solo como mención de contexto, NUNCA como actividad central del día.
+  OBLIGATORIO en cambio: (1) Barrios locales auténticos que los turistas no descubren — con nombres reales y específicos. (2) Restaurantes donde comen los locales: sin menú en inglés, sin fotos en el menú, sin reseñas masivas en TripAdvisor o Google. (3) Mercados populares, talleres de artesanos, galerías underground, proyectos culturales independientes. (4) Experiencias de nicho que requieren conocimiento previo: rutas ciclistas locales, clubes de jazz pequeños, mercados de pulgas, bares sin señalética exterior. (5) Horarios anti-turista: entrar a un sitio emblemático a las 7am antes de las hordas, o visitarlo en temporada baja. Si hay un ícono absolutamente imprescindible del destino, incluirlo de forma no turística (acceso especial, punto de vista alternativo, contexto histórico profundo). Tono: de igual a igual, viajero experimentado hablándole a otro igual — sin explicaciones básicas de transporte, sin mapas obvios, sin frases de guía turístico.`
+      : esIntermedio
+      ? `
+- PERFIL VIAJERO INTERMEDIO — YA VIAJÓ ANTES, CONOCE LO BÁSICO: Mezcla estratégica — máximo 30% íconos clásicos (vividos de forma menos turística: acceso especial, horario temprano, perspectiva local) + 70% experiencias auténticas. Evita tours masivos y restaurantes en zonas 100% turísticas. Incluye al menos 1 barrio fuera del circuito turístico habitual y al menos 1 experiencia que salga de la zona de confort (clase de cocina local, visita a un mercado popular, taller artesanal). Tono: compañero de viaje experimentado, no guía turístico.`
+      : esNovato
+      ? `
+- PERFIL EXPLORADOR CURIOSO — PRIMERA VEZ EN ESTE TIPO DE DESTINO: Incluye los imperdibles clásicos — son clásicos por razones válidas y este viajero no los conoce. Equilibra íconos turísticos con al menos 1-2 experiencias auténticas locales por ciudad. Explica el contexto cultural básico de cada lugar (por qué es importante, qué esperar, qué no hacer). Tips prácticos imprescindibles: cómo llegar del aeropuerto, propinas locales, costumbres que sorprenden, apps útiles. Tono: guía amigable, orientador y empático con quien viaja por primera vez.`
       : '';
+
 
     // ── Movilidad reducida ────────────────────────────────────────────────────
     const movilidadCtx = formData.movilidadReducida
       ? '\n- MOVILIDAD REDUCIDA: alguien en el grupo tiene movilidad reducida. TODAS las actividades deben ser accesibles (sin escaleras largas, terrenos irregulares ni distancias a pie extensas). Menciona accesibilidad en cada actividad. Prioriza transporte con opciones accesibles y alojamiento con habitaciones adaptadas.'
+      : '';
+
+
+    // ── Eficiencia de distancia según días de viaje ───────────────────────────
+    const _origenNorm = (formData.origen || 'Santiago, Chile').toLowerCase();
+    const _esSudAmerica = ['chile','argentina','perú','peru','colombia','brasil','brazil','bolivia','ecuador','uruguay','venezuela','paraguay'].some(p => _origenNorm.includes(p));
+    const _maxVuelo = dias <= 4 ? 6 : dias <= 7 ? 10 : dias <= 11 ? 14 : 99;
+    const distanciaCtx = (_esSudAmerica && _maxVuelo < 99)
+      ? `\n- EFICIENCIA DE VUELO: El viaje es de solo ${dias} días. El vuelo máximo RECOMENDADO desde ${formData.origen || 'Chile'} es ${_maxVuelo}h por tramo.${dias <= 4 ? ' Para 4 días o menos, los destinos viables son: Sudamérica, Caribe cercano, México. PROHIBIDO recomendar Europa, Asia, Oceanía.' : dias <= 7 ? ' Para 7 días, el vuelo a Japón o Sudeste Asiático (14h+) consume 3-4 días reales en transporte. Evitar. Europa y EE.UU. son el límite. Si el destino ya fue elegido y supera 10h de vuelo, advertir en resumen.nota_importante cuántos días reales quedan disponibles.' : ' Para 11 días, Oceanía y Asia lejana (16h+) son el límite. Incluir en resumen.nota_importante el tiempo real de viaje si aplica.'}`
       : '';
 
     // ── clienteCtx completo ───────────────────────────────────────────────────
@@ -824,7 +842,7 @@ DATOS DEL CLIENTE:
 - Número de viajeros: ${formData.numViajeros || 2}${formData.tipoViaje === 'familia' && (formData.numNinos || 0) > 0 ? ` (${formData.numNinos} niño${formData.numNinos > 1 ? 's' : ''} + ${(formData.numViajeros || 2) - (formData.numNinos || 0)} adulto${(formData.numViajeros || 2) - (formData.numNinos || 0) !== 1 ? 's' : ''})` : ''}
 - Intereses EN ORDEN DE PRIORIDAD: ${interesesConPeso}
 - Ritmo: ${formData.ritmo <= 2 ? 'Relajado (max 2 actividades/día)' : formData.ritmo <= 3 ? 'Moderado (2-3 actividades)' : 'Intenso (3-4 actividades)'}
-- Alojamiento preferido: ${formData.alojamiento || 'hotel'}${ocasionCtx}${restriccionCtx}${horarioCtx}${aerolineaCtx}${prioridadCtx}${primeraVisitaCtx}${movilidadCtx}
+- Alojamiento preferido: ${formData.alojamiento || 'hotel'}${ocasionCtx}${restriccionCtx}${horarioCtx}${aerolineaCtx}${prioridadCtx}${primeraVisitaCtx}${movilidadCtx}${distanciaCtx}
 ${budgetWarning}
 Hoy es ${today}. Los precios, vuelos y datos de alojamiento deben ser realistas para esta fecha.
 ${formData.mesViaje

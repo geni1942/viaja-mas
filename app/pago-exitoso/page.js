@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const C = {
@@ -197,6 +197,8 @@ function ItinerarioContent() {
   const [contactOpen, setContactOpen] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [printAll, setPrintAll] = useState(false);
+  const [progreso, setProgreso] = useState(0);
+  const progresoRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -281,21 +283,74 @@ function ItinerarioContent() {
     })();
   }, [searchParams]);
 
+  // ── Barra de progreso simulada durante la carga ──────────────────────────
+  useEffect(() => {
+    if (estado !== 'cargando') {
+      if (progresoRef.current) { clearInterval(progresoRef.current); progresoRef.current = null; }
+      if (estado === 'listo') setProgreso(100);
+      return;
+    }
+    setProgreso(0);
+    const etapas = [
+      { hasta: 15, duracion: 3000 },   // Verificando pago
+      { hasta: 35, duracion: 6000 },   // Analizando preferencias
+      { hasta: 60, duracion: 10000 },  // Generando itinerario
+      { hasta: 80, duracion: 10000 },  // Revisando detalles
+      { hasta: 93, duracion: 12000 },  // Perfeccionando...
+    ];
+    let etapaIdx = 0;
+    let startTime = Date.now();
+
+    progresoRef.current = setInterval(() => {
+      const etapa = etapas[etapaIdx];
+      if (!etapa) return;
+      const elapsed = Date.now() - startTime;
+      const pct = etapa.hasta - etapas[etapaIdx > 0 ? etapaIdx - 1 : 0]?.hasta || etapa.hasta;
+      const prev = etapaIdx > 0 ? etapas[etapaIdx - 1].hasta : 0;
+      const cur = Math.min(etapa.hasta, prev + (pct * elapsed / etapa.duracion));
+      setProgreso(cur);
+      if (elapsed >= etapa.duracion) { etapaIdx++; startTime = Date.now(); }
+    }, 200);
+
+    return () => { if (progresoRef.current) clearInterval(progresoRef.current); };
+  }, [estado]);
+
+
   // ─── CARGANDO ───────────────────────────────────────────────────────────────
-  if (estado === 'cargando') return (
-    <div style={{ minHeight: '100vh', background: C.crema, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <img
-        src="/images/vivante_logo.svg"
-        alt="VIVANTE"
-        style={{ height: 120, width: 'auto', marginBottom: 24, animation: 'spin 2s linear infinite', filter: 'brightness(0)' }}
-        onError={e => { e.target.style.display = 'none'; }}
-      />
-      <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 26, color: C.carbon, margin: '0 0 8px', textAlign: 'center' }}>Preparando tu aventura...</h1>
-      <p style={{ color: '#666', textAlign: 'center', lineHeight: 1.6 }}>Armando tu itinerario personalizado.<br /><strong>Tarda unos 30 segundos.</strong></p>
-      <p style={{ color: C.violeta, fontStyle: 'italic', fontSize: 14, marginTop: 8 }}>Mientras tanto, ¿ya pensaste qué ropa llevar? 😄</p>
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (estado === 'cargando') {
+    const etapaMsg = progreso < 15 ? 'Verificando tu pago...'
+      : progreso < 35 ? 'Analizando tus preferencias...'
+      : progreso < 60 ? 'Generando tu itinerario personalizado...'
+      : progreso < 80 ? 'Revisando recomendaciones de vuelos y alojamiento...'
+      : '¡Casi listo! Perfeccionando los últimos detalles...';
+    return (
+      <div style={{ minHeight: '100vh', background: C.crema, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <img
+          src="/images/vivante_logo.svg"
+          alt="VIVANTE"
+          style={{ height: 100, width: 'auto', marginBottom: 28, animation: 'spin 2s linear infinite', filter: 'brightness(0)' }}
+          onError={e => { e.target.style.display = 'none'; }}
+        />
+        <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, color: C.carbon, margin: '0 0 6px', textAlign: 'center' }}>Preparando tu aventura...</h1>
+        <p style={{ color: '#888', textAlign: 'center', fontSize: 14, marginBottom: 28 }}>{etapaMsg}</p>
+
+        {/* Barra de progreso */}
+        <div style={{ width: '100%', maxWidth: 340, background: '#e5e7eb', borderRadius: 99, height: 8, overflow: 'hidden', marginBottom: 12 }}>
+          <div style={{
+            height: '100%',
+            width: `${Math.min(progreso, 100)}%`,
+            background: 'linear-gradient(90deg, #FF6332, #E83E8C)',
+            borderRadius: 99,
+            transition: 'width 0.4s ease',
+          }} />
+        </div>
+        <p style={{ color: C.coral, fontSize: 13, fontWeight: 600, marginBottom: 20 }}>{Math.round(Math.min(progreso, 99))}%</p>
+
+        <p style={{ color: C.violeta, fontStyle: 'italic', fontSize: 13, textAlign: 'center' }}>¿Ya pensaste qué ropa llevar? 😄</p>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
 
   // ─── ERROR ──────────────────────────────────────────────────────────────────
   if (estado === 'error') return (
@@ -483,14 +538,14 @@ function ItinerarioContent() {
       {/* EMAIL NOTICE */}
       <div style={{ background: C.violeta, padding: '10px 20px', textAlign: 'center' }} className="no-print">
         <p style={{ color: '#fff', margin: 0, fontSize: 13 }}>
-          📧 Itinerario enviado a <strong>{formData?.email}</strong>
+          📧 Itinerario enviado a <strong>{formData?.email}</strong> — revisa tu bandeja de entrada y spam
         </p>
       </div>
 
       {/* PRICE DISCLAIMER */}
       <div style={{ background: '#FFF0EB', padding: '8px 20px', textAlign: 'center' }}>
         <p style={{ margin: 0, fontSize: 12, color: '#888' }}>
-          💡 Precios estimativos {new Date().getFullYear()}. Los links de vuelos y alojamiento muestran precios en tiempo real.
+          💡 Precios estimativos {new Date().getFullYear()}. Los links de vuelos y alojamiento muestran precios estimados.
         </p>
       </div>
 
@@ -1247,7 +1302,7 @@ function ItinerarioContent() {
           ¡Que tengas el viaje de tu vida, {formData?.nombre}! ✈️
         </p>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, margin: 0 }}>
-          <a href="https://www.vivante.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>www.vivante.com</a>
+          <a href="https://www.vivevivante.com" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>www.vivevivante.com</a>
           {' · '}
           <a href="https://instagram.com/vive.vivante" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>@vive.vivante</a>
           {' · viaja más. planifica menos.'}

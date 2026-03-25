@@ -88,6 +88,20 @@ export async function POST(request) {
     };
     const tipoViajero = tipoViajeMap[data.tipoViaje] || data.tipoViaje;
 
+    // ── Regla distancia/eficiencia por días ──────────────────────────────────
+    const _origenNormS = (data.origen || '').toLowerCase();
+    const _esSudAmericaS = ['chile','argentina','perú','peru','colombia','brasil','brazil','bolivia','ecuador','uruguay','venezuela','paraguay'].some(p => _origenNormS.includes(p));
+    const _diasNum = parseInt(data.dias) || 7;
+    const distanciaReglaSuggest = _esSudAmericaS
+      ? _diasNum <= 4
+        ? `\n- DISTANCIA CRÍTICA: Solo ${_diasNum} días de viaje. OBLIGATORIO proponer SOLO destinos con máximo 6h de vuelo desde ${data.origen} (Sudamérica, Caribe cercano, México). Europa, Asia, Oceanía y África están PROHIBIDOS — el tiempo de vuelo haría el viaje ineficiente.`
+        : _diasNum <= 7
+        ? `\n- DISTANCIA: ${_diasNum} días de viaje. Máximo razonable: 10h de vuelo por tramo desde ${data.origen}. Japón, Sudeste Asiático y Oceanía tienen 14h+ de vuelo = 3 días perdidos en transporte de 7. Evitar a menos que sea el único interés del viajero. Europa del Oeste y EE.UU. son el límite recomendable.`
+        : _diasNum <= 11
+        ? `\n- DISTANCIA: ${_diasNum} días. Evita destinos con más de 14h de vuelo por tramo (Oceanía, Asia muy lejana). Menciona el tiempo de vuelo en "por_que" cuando sea relevante.`
+        : ''
+      : '';
+
     // Prompt para generar 3 opciones de destino
     const prompt = `Eres un experto en viajes. Genera exactamente 3 opciones de destino para este viajero. Las 3 opciones deben ser las MEJORES para su perfil específico — no sigas un formato rígido de tipos, elige lo que realmente encaje mejor.
 
@@ -98,7 +112,7 @@ PERFIL DEL VIAJERO:
 - Tipo de viajero: ${tipoViajero} (${data.numViajeros} personas)
 - Intereses EN PRIORIDAD: ${interesesTexto}
 - Ritmo preferido: ${ritmoTexto}
-- Alojamiento preferido: ${alojTexto}${familiaCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${restriccionCtxSuggest}${experienciaCtxSuggest}
+- Alojamiento preferido: ${alojTexto}${familiaCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${restriccionCtxSuggest}${experienciaCtxSuggest}${distanciaReglaSuggest}
 
 REGLAS:
 - Variedad: las 3 opciones deben ser destinos diferentes entre sí (diferentes regiones o países)
@@ -110,6 +124,7 @@ REGLAS:
 - Si el alojamiento es "Hostal": prioriza la ruta mochilera (Bangkok, Lisboa, Medellín, Berlín, etc.)
 - Si es "B&B": ciudades medianas con encanto (Toscana, Provence, Alentejo) sobre megalópolis
 - El presupuesto es por persona
+- Considera que un vuelo largo consume días reales del viaje (14h de vuelo = 1 día perdido por tramo)
 
 Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
 {

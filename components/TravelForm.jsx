@@ -125,11 +125,11 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return formData.tieneDestino !== null && (formData.tieneDestino === false || formData.destino.trim());
+      case 1: return formData.nombre.trim() !== '' && formData.email.includes('@') && formData.tieneDestino !== null && (formData.tieneDestino === false || formData.destino.trim());
       case 2: return formData.origen.trim() && formData.presupuesto >= 500 && formData.dias >= 3;
       case 3: return formData.tipoViaje !== '';
       case 4: return formData.intereses.length > 0 && formData.alojamiento !== '';
-      case 5: return formData.nombre.trim() && formData.email.includes('@');
+      case 5: return true;
       default: return true;
     }
   };
@@ -435,10 +435,36 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <MapPin className="w-8 h-8 text-orange-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">¿A dónde vamos?</h2>
-                <p className="text-gray-500">Empecemos por lo más importante</p>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">¡Comencemos!</h2>
+                <p className="text-gray-500">Cuéntanos quién eres para personalizar tu experiencia</p>
               </div>
               <div className="space-y-4">
+                {/* Nombre */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">¿Cómo te llamamos?</label>
+                  <input
+                    type="text"
+                    placeholder="Tu nombre"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tu email</label>
+                  <input
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Aquí te enviaremos tu itinerario personalizado.</p>
+                </div>
+                <div className="border-t border-gray-100 pt-2">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">¿Ya tienes destino en mente?</p>
+                </div>
                 {/* Tipo de destino */}
                 <button
                   onClick={() => setFormData({ ...formData, tieneDestino: false, destino: '', primeraVisita: null })}
@@ -506,7 +532,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 {/* Experiencia de viajero */}
                 <div className="pt-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ¿Con qué frecuencia viajás al exterior? <span className="text-gray-400 font-normal">(opcional)</span>
+                    ¿Con qué frecuencia viajas al exterior? <span className="text-gray-400 font-normal">(opcional)</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
@@ -613,7 +639,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 {/* Mes de viaje */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ¿Cuándo querés viajar? <span className="text-gray-400 font-normal">(opcional)</span>
+                    ¿Cuándo quieres viajar? <span className="text-gray-400 font-normal">(opcional)</span>
                   </label>
                   <select
                     value={formData.mesViaje}
@@ -791,6 +817,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                       { id: 'sin-restriccion', label: 'Sin restricciones', emoji: '🍽️' },
                       { id: 'vegetariano', label: 'Vegetariano', emoji: '🥗' },
                       { id: 'vegano', label: 'Vegano', emoji: '🌱' },
+                      { id: 'pescetariano', label: 'Pescetariano', emoji: '🐟' },
                       { id: 'sin-gluten', label: 'Sin gluten', emoji: '🌾' },
                       { id: 'halal', label: 'Halal', emoji: '☪️' },
                     ].map((op) => (
@@ -903,32 +930,28 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-3xl">📧</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">¡Último paso!</h2>
-                <p className="text-gray-500">¿Dónde te enviamos los detalles?</p>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">{`¡Todo listo${formData.nombre ? `, ${formData.nombre}` : ''}!`}</h2>
+                <p className="text-gray-500">Revisa tu resumen antes de generar tu itinerario</p>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">¿Cómo te llamas?</label>
-                  <input
-                    type="text"
-                    placeholder="Tu nombre"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none"
-                  />
+              <div className="bg-gray-50 rounded-2xl p-4 space-y-3 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">✈️ Destino</span>
+                  <span className="font-medium text-gray-800 text-right max-w-[55%]">{formData.tieneDestino ? (formData.destino || '—') : 'Sorpréndeme'}</span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tu email</label>
-                  <input
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none"
-                  />
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">💰 Presupuesto</span>
+                  <span className="font-medium text-gray-800">{`$${formData.presupuesto.toLocaleString()} USD · ${formData.dias} días`}</span>
                 </div>
-                {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">👥 Viajeros</span>
+                  <span className="font-medium text-gray-800">{formData.numViajeros} {formData.numViajeros === 1 ? 'persona' : 'personas'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">📧 Email</span>
+                  <span className="font-medium text-gray-800">{formData.email}</span>
+                </div>
               </div>
+              {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mt-3">{error}</div>}
             </div>
           )}
 
@@ -944,7 +967,12 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
             )}
             {step < 5 ? (
               <button
-                onClick={() => setStep(step + 1)}
+                onClick={() => {
+                  if (step === 1) {
+                    fetch('/api/lead-capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre: formData.nombre, email: formData.email }) }).catch(() => {});
+                  }
+                  setStep(step + 1);
+                }}
                 disabled={!canProceed()}
                 className={`flex-1 py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all ${canProceed() ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:shadow-lg' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
               >
