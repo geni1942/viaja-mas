@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // ─── GET /api/payment/recover-session?preference_id=xxx ──────────────────────
 // Recupera formData desde los metadatos de una preferencia de MercadoPago.
 // Usado como fallback cross-device cuando localStorage no tiene los datos
