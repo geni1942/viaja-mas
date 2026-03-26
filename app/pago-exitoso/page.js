@@ -461,6 +461,23 @@ function ItinerarioContent() {
         * { box-sizing: border-box; }
         a { color: ${C.violeta}; }
         .tab-btn { border: none; background: none; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: Inter, sans-serif; }
+        /* ── RESPONSIVE: tabs y tablas ── */
+        .tab-scroll { display: flex; }
+        .tab-select-wrap { display: none; }
+        .vivante-resp-table { width: 100%; border-collapse: collapse; }
+        .mobile-pdf-bar { display: none; }
+        @media (max-width: 639px) {
+          .tab-scroll { display: none !important; }
+          .tab-select-wrap { display: block; }
+          /* Tablas → tarjetas apiladas */
+          .vivante-resp-table { min-width: 0 !important; }
+          .vivante-resp-table thead { display: none !important; }
+          .vivante-resp-table tbody tr { display: flex; flex-direction: column; margin-bottom: 12px; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #FFF0EB; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+          .vivante-resp-table tbody td { display: block !important; padding: 8px 14px !important; border-bottom: 1px solid #FCF8F4; font-size: 13px !important; }
+          .vivante-resp-table tbody td:last-child { border-bottom: none; }
+          /* PDF bar fijo en mobile */
+          .mobile-pdf-bar { display: block; }
+        }
         /* ── PRINT: mostrar TODAS las secciones ── */
         @media print {
           /* Eliminar URL/fecha del header y footer del navegador — margin:0 lo suprime */
@@ -550,13 +567,31 @@ function ItinerarioContent() {
       </div>
 
       {/* TABS */}
-      <div className="no-print" style={{ background: '#fff', borderBottom: `2px solid ${C.bg1}`, overflowX: 'auto', display: 'flex', padding: '0 8px' }}>
-        {allTabs.map(tab => (
-          <button key={tab} className="tab-btn" onClick={() => setActiveTab(tab)}
-            style={{ padding: '13px 14px', fontSize: 13, fontWeight: show(tab) ? 700 : 400, color: show(tab) ? C.coral : '#666', borderBottom: show(tab) ? `3px solid ${C.coral}` : '3px solid transparent', marginBottom: -2 }}>
-            {tabLabels[tab]}
-          </button>
-        ))}
+      <div className="no-print">
+        {/* Mobile: dropdown selector */}
+        <div className="tab-select-wrap" style={{ background: '#fff', borderBottom: `2px solid ${C.bg1}`, padding: '10px 14px' }}>
+          <div style={{ position: 'relative' }}>
+            <select
+              value={activeTab}
+              onChange={e => setActiveTab(e.target.value)}
+              style={{ width: '100%', padding: '11px 40px 11px 14px', fontSize: 15, fontWeight: 600, color: C.coral, border: `2px solid ${C.coral}`, borderRadius: 10, background: '#fff', outline: 'none', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer' }}
+            >
+              {allTabs.map(tab => (
+                <option key={tab} value={tab}>{tabLabels[tab]}</option>
+              ))}
+            </select>
+            <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: C.coral, fontSize: 16 }}>▾</span>
+          </div>
+        </div>
+        {/* Desktop: scrollable tab row */}
+        <div className="tab-scroll" style={{ background: '#fff', borderBottom: `2px solid ${C.bg1}`, overflowX: 'auto', padding: '0 8px' }}>
+          {allTabs.map(tab => (
+            <button key={tab} className="tab-btn" onClick={() => setActiveTab(tab)}
+              style={{ padding: '13px 14px', fontSize: 13, fontWeight: show(tab) ? 700 : 400, color: show(tab) ? C.coral : '#666', borderBottom: show(tab) ? `3px solid ${C.coral}` : '3px solid transparent', marginBottom: -2 }}>
+              {tabLabels[tab]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* CONTENIDO — id necesario para html2pdf.js */}
@@ -669,7 +704,7 @@ function ItinerarioContent() {
 
             {/* Tabla de aerolíneas */}
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
+              <table className="vivante-resp-table" style={{ minWidth: 500 }}>
                 <thead>
                   <tr style={{ background: C.coral }}>
                     {['Aerolínea', 'Ruta', 'Precio estimado', 'Duración', 'Tip insider', ''].map(h => (
@@ -721,7 +756,7 @@ function ItinerarioContent() {
           {(itinerario?.alojamiento || []).map((zona, zi) => (
             <Sec key={zi} title={`🏨 Alojamiento en ${zona.destino || 'Destino'}${zona.noches ? ` (${zona.noches} noches)` : ''}`}>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+                <table className="vivante-resp-table" style={{ minWidth: 520 }}>
                   <thead>
                     <tr style={{ background: C.violeta }}>
                       {['Categoría', 'Hotel', 'Precio/noche', 'Por qué elegirlo', ''].map(h => (
@@ -1291,6 +1326,16 @@ function ItinerarioContent() {
           )}
         </div>
 
+      </div>
+
+      {/* FIXED PDF BAR — mobile only (hidden via CSS on desktop) */}
+      <div className="no-print mobile-pdf-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', boxShadow: '0 -3px 16px rgba(0,0,0,0.13)', padding: '12px 16px 16px', zIndex: 200 }}>
+        <button
+          onClick={handleDownloadPdf}
+          disabled={pdfLoading}
+          style={{ width: '100%', background: `linear-gradient(90deg, ${C.coral}, ${C.fucsia})`, color: '#fff', border: 'none', padding: '14px 20px', borderRadius: 12, fontWeight: 700, cursor: pdfLoading ? 'wait' : 'pointer', fontSize: 15, opacity: pdfLoading ? 0.7 : 1 }}>
+          {pdfLoading ? '⏳ Generando PDF...' : '📄 Descargar PDF completo'}
+        </button>
       </div>
 
       {/* FOOTER */}
