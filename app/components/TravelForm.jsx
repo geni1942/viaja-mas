@@ -42,11 +42,12 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
       precioClp: 9990,   // CLP (usado en MercadoPago Chile)
       descripcion: 'Itinerario personalizado día a día',
       incluye: [
-        'Itinerario completo en PDF',
-        'Links de vuelos y alojamientos',
-        'Puntos de interés',
-        'Tips culturales, de conectividad y dinero',
-        'Tips locales básicos para viajeros'
+        '✈️ Vuelos reales con precios y rutas',
+        '🏨 3 opciones de hotel para reservar',
+        '📅 Itinerario completo día a día',
+        '🍽️ Restaurantes curados con precios',
+        '💰 Presupuesto desglosado real',
+        '📩 PDF en tu email, listo sin internet',
       ]
     },
     {
@@ -57,11 +58,12 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
       descripcion: 'Experiencia premium con todos los detalles',
       incluye: [
         'Todo lo del Vivante Básico',
-        'Restaurantes recomendados por zona y RRSS',
-        'Opciones de tours y actividades',
-        'Tips de seguridad y transporte',
-        'Tips culturales, de conectividad y dinero',
-        'Presupuesto detallado por día'
+        '☔ Plan B si llueve o algo cierra',
+        '🍸 Bares con tip insider incluido',
+        '🚕 Del aeropuerto al hotel: todas las opciones',
+        '📱 Conectividad y eSIM resuelta antes de salir',
+        '🔒 Zonas a evitar y estafas del destino',
+        '🎒 Qué empacar según el clima',
       ],
       popular: true
     }
@@ -222,7 +224,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
     
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto relative">
+        <div className="bg-white rounded-3xl w-full max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto relative">
           <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 z-10">✕</button>
           <div className="p-6 sm:p-8">
             <div className="text-center mb-6">
