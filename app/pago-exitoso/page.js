@@ -197,6 +197,8 @@ function ItinerarioContent() {
   const [contactOpen, setContactOpen] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [printAll, setPrintAll] = useState(false);
+  const [emailResent, setEmailResent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [progreso, setProgreso] = useState(0);
   const progresoRef = useRef(null);
 
@@ -428,6 +430,27 @@ function ItinerarioContent() {
     }
   };
 
+  // Reenviar email con PDF adjunto
+  const handleResendEmail = async () => {
+    if (emailSending || emailResent || !formData || !itinerario) return;
+    setEmailSending(true);
+    try {
+      const res = await fetch('/api/resend-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formData, itinerario, planId }),
+      });
+      if (res.ok) {
+        setEmailResent(true);
+        setTimeout(() => setEmailResent(false), 8000);
+      }
+    } catch (e) {
+      console.error('Resend error:', e);
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   // Helpers para redes sociales — usa solo el nombre de la ciudad principal
   const destRaw = (res.destino || formData?.destino || '').split(/[,(]/)[0].trim();
   const destTag = destRaw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
@@ -553,10 +576,29 @@ function ItinerarioContent() {
       </div>
 
       {/* EMAIL NOTICE */}
-      <div style={{ background: C.violeta, padding: '10px 20px', textAlign: 'center' }} className="no-print">
+      <div style={{ background: C.violeta, padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }} className="no-print">
         <p style={{ color: '#fff', margin: 0, fontSize: 13 }}>
           📧 Itinerario enviado a <strong>{formData?.email}</strong> — revisa tu bandeja de entrada y spam
         </p>
+        <button
+          onClick={handleResendEmail}
+          disabled={emailSending || emailResent}
+          style={{
+            background: emailResent ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.15)',
+            color: '#fff',
+            border: '1.5px solid rgba(255,255,255,0.5)',
+            padding: '5px 14px',
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: emailSending || emailResent ? 'default' : 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          {emailSending ? '⏳ Enviando...' : emailResent ? '✅ ¡Email enviado!' : '📨 Reenviar email'}
+        </button>
       </div>
 
       {/* PRICE DISCLAIMER */}
