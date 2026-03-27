@@ -59,10 +59,10 @@ export async function POST(request) {
 
     // ── Restricción dietaria ──────────────────────────────────────────────────
     const restriccionSuggestMap = {
-      'vegetariano': 'vegetariano — prioriza destinos con buena oferta vegetariana',
-      'vegano':      'vegano — prioriza destinos con buena cultura plant-based (Asia, Europa occidental)',
-      'sin-gluten':  'sin gluten — evita destinos donde sea difícil comer sin gluten',
-      'halal':       'halal — prioriza destinos con restaurantes halal accesibles',
+      'vegetariano': 'VEGETARIANO — prioriza destinos con amplia oferta vegetariana real (no solo ensaladas). Ciudades universitarias y cosmopolitas son ideales. EVITA destinos donde la cocina local sea principalmente carne (ej: Buenos Aires asado-céntrico es factible en ciudad; zonas rurales de Argentina, no).',
+      'vegano':      'VEGANO — prioriza destinos con cultura plant-based establecida: Berlín, Amsterdam, Barcelona, Ciudad de México, Bangkok, Bali, Lisboa. PENALIZA destinos donde el veganismo es muy difícil: zonas rurales de Europa del Este, ciudades medianas de LATAM sin oferta diversa.',
+      'sin-gluten':  'SIN GLUTEN — prioriza destinos donde el sin-gluten es conocido y accesible. EVITA destinos con cocina basada en pasta/pan masivo sin alternativas (sur de Italia rural, por ejemplo). Incluye en el "por_que" cómo manejar la restricción en ese destino.',
+      'halal':       'HALAL — prioriza destinos con comunidad musulmana establecida y oferta halal clara: Estambul, Dubai, Kuala Lumpur, México DF, Madrid (barrio de Lavapiés), etc. Penaliza destinos donde sea muy difícil encontrar opciones halal.',
     };
     const restriccionCtxSuggest = data.restriccionDietaria && data.restriccionDietaria !== 'sin-restriccion' && restriccionSuggestMap[data.restriccionDietaria]
       ? `\n- Alimentación: ${restriccionSuggestMap[data.restriccionDietaria]}`
@@ -94,11 +94,11 @@ export async function POST(request) {
     const _diasNum = parseInt(data.dias) || 7;
     const distanciaReglaSuggest = _esSudAmericaS
       ? _diasNum <= 4
-        ? `\n- DISTANCIA CRÍTICA: Solo ${_diasNum} días de viaje. OBLIGATORIO proponer SOLO destinos con máximo 6h de vuelo desde ${data.origen} (Sudamérica, Caribe cercano, México). Europa, Asia, Oceanía y África están PROHIBIDOS — el tiempo de vuelo haría el viaje ineficiente.`
+        ? `\n- DISTANCIA CRÍTICA — SOLO ${_diasNum} DÍAS: OBLIGATORIO proponer ÚNICAMENTE destinos con máximo 6h de vuelo desde ${data.origen} (Sudamérica, Caribe cercano, México). PROHIBIDOS Europa, Asia, Oceanía y África — el tiempo de vuelo haría el viaje ineficiente.`
         : _diasNum <= 7
-        ? `\n- DISTANCIA: ${_diasNum} días de viaje. Máximo razonable: 10h de vuelo por tramo desde ${data.origen}. Japón, Sudeste Asiático y Oceanía tienen 14h+ de vuelo = 3 días perdidos en transporte de 7. Evitar a menos que sea el único interés del viajero. Europa del Oeste y EE.UU. son el límite recomendable.`
+        ? `\n- DISTANCIA CRÍTICA — ${_diasNum} DÍAS: OBLIGATORIO que al menos 2 de las 3 opciones tengan vuelo ≤8h desde ${data.origen}. PROHIBIDO sugerir Japón, Sudeste Asiático, Oceanía o cualquier destino con vuelo >12h — esos destinos necesitan 15+ días para aprovecharse bien. Para cualquier opción con vuelo >10h, OBLIGATORIO indicar en "por_que" cuántos días reales quedan en destino descontando tránsito (vuelo de ida + vuelta = 2 días perdidos). Europa del Oeste es el límite máximo solo si encaja con los intereses — con advertencia de días reales disponibles.`
         : _diasNum <= 11
-        ? `\n- DISTANCIA: ${_diasNum} días. Evita destinos con más de 14h de vuelo por tramo (Oceanía, Asia muy lejana). Menciona el tiempo de vuelo en "por_que" cuando sea relevante.`
+        ? `\n- DISTANCIA — ${_diasNum} DÍAS: PROHIBIDOS Oceanía y Asia muy lejana (>16h de vuelo). Para destinos de 12-14h (Japón, Sudeste Asiático): solo incluirlos si los intereses del viajero los justifican claramente, e incluir en "por_que" los días reales disponibles en destino.`
         : ''
       : '';
 
@@ -124,7 +124,8 @@ REGLAS:
 - Si el alojamiento es "Hostal": prioriza la ruta mochilera (Bangkok, Lisboa, Medellín, Berlín, etc.)
 - Si es "B&B": ciudades medianas con encanto (Toscana, Provence, Alentejo) sobre megalópolis
 - El presupuesto es por persona
-- Considera que un vuelo largo consume días reales del viaje (14h de vuelo = 1 día perdido por tramo)
+- Considera que un vuelo largo consume días reales del viaje (vuelo >8h = 1 día perdido por tramo; vuelo >12h = 2 días perdidos)
+- Calcula y completa el campo "dias_reales_en_destino" = días totales - días perdidos en tránsito (ida + vuelta). Ejemplo: 7 días con vuelo 13h = 7 - 2 = 5 días reales
 
 Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
 {
@@ -136,6 +137,7 @@ Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
       "paises": "Italia y Francia",
       "dias_distribucion": "4 días Roma + 3 días París",
       "precio_estimado": 1850,
+      "dias_reales_en_destino": 5,
       "porque": "Combinación perfecta de historia, arte y gastronomía mediterránea y francesa",
       "highlights": ["Coliseo y Vaticano", "Torre Eiffel y Louvre", "Pasta romana y croissants parisinos"]
     },
@@ -146,6 +148,7 @@ Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
       "paises": "España",
       "dias_distribucion": "4 días Barcelona + 3 días Madrid",
       "precio_estimado": 1200,
+      "dias_reales_en_destino": 5,
       "porque": "Lo mejor de España: playa mediterránea y cultura urbana",
       "highlights": ["Sagrada Familia y playas", "Museo del Prado y tapas", "Tren AVE entre ciudades"]
     },
@@ -156,6 +159,7 @@ Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
       "paises": "Portugal",
       "dias_distribucion": "7 días completos",
       "precio_estimado": 950,
+      "dias_reales_en_destino": 7,
       "porque": "Ciudad costera con encanto, asequible y llena de historia",
       "highlights": ["Barrio de Alfama", "Pastéis de Belém", "Excursión a Sintra"]
     }
