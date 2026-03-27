@@ -1342,7 +1342,7 @@ Para origen_iata y destino_iata: c�digo IATA de 3 letras del aeropuerto princi
       // Restricci�n dietaria
       restriccionCtx ? `- ALIMENTACI�N: ${restriccionDescMap[formData.restriccionDietaria]}` : '',
       // Horario preferido
-      horarioCtx ? `- HORARIOS DEL D�A: ${horarioDescMap[formData.horarioPreferido]}` : '',
+      horarioCtx,
       // Aerol�nea preferida
       aerolineaCtx ? `- AEROL�NEA PREFERIDA: ${aerolineaDescMap[formData.aerolineaPreferida]} � si opera la ruta a precio competitivo (m�x 20% m�s cara que la opci�n m�s econ�mica), ponla como PRIMERA opci�n en el array de vuelos.` : '',
       // Prioridad de gasto
