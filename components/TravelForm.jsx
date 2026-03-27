@@ -34,7 +34,6 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
     intereses: [],
     restriccionDietaria: 'sin-restriccion',
     ritmo: 3,
-    horarioPreferido: 'normal',
     alojamiento: '',
     aerolineaPreferida: '',
     experienciaViajero: '',
@@ -509,15 +508,17 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                 {formData.tieneDestino === true && formData.destino.trim().length > 2 && (
                   <div className="fade-in">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ¿Ya visitaste {formData.destino.split(',')[0].trim()} antes?
+                      ¿Cuántas veces visitaste {formData.destino.split(',')[0].trim()}?
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        { id: false, label: 'Sí, ya fui', emoji: '✅' },
-                        { id: true, label: 'Primera vez', emoji: '🌟' },
+                        { id: 'primera-vez', label: 'Primera vez', emoji: '🌟' },
+                        { id: '1-2-veces', label: '1 o 2 veces', emoji: '✈️' },
+                        { id: '3-5-veces', label: '3 a 5 veces', emoji: '🗺️' },
+                        { id: 'regularmente', label: 'Lo conozco bien', emoji: '🏡' },
                       ].map((op) => (
                         <button
-                          key={String(op.id)}
+                          key={op.id}
                           onClick={() => setFormData({ ...formData, primeraVisita: op.id })}
                           className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${formData.primeraVisita === op.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'}`}
                         >
@@ -853,27 +854,6 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                   </div>
                 </div>
 
-                {/* Horario preferido */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">¿Cómo arrancas el día?</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'madrugador', label: 'Madrugador', emoji: '🌅', desc: 'Arranco a las 7' },
-                      { id: 'normal', label: 'Normal', emoji: '☀️', desc: 'Arranco a las 9-10' },
-                      { id: 'nocturno', label: 'Noctámbulo', emoji: '🌙', desc: 'Arranco al mediodía' },
-                    ].map((h) => (
-                      <button
-                        key={h.id}
-                        onClick={() => setFormData({ ...formData, horarioPreferido: h.id })}
-                        className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${formData.horarioPreferido === h.id ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'}`}
-                      >
-                        <span className="text-xl">{h.emoji}</span>
-                        <span className="text-xs font-medium text-gray-700">{h.label}</span>
-                        <span className="text-xs text-gray-400">{h.desc}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Alojamiento */}
                 <div>
