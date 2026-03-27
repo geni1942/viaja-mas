@@ -88,6 +88,19 @@ export async function POST(request) {
     };
     const tipoViajero = tipoViajeMap[data.tipoViaje] || data.tipoViaje;
 
+    // ── Regla de presupuesto ─────────────────────────────────────────────────
+    const _presupuestoNum = parseInt(data.presupuesto) || 0;
+    const _presupuestoDiaSuggest = _presupuestoNum > 0 ? Math.round(_presupuestoNum / (parseInt(data.dias) || 7)) : 0;
+    const presupuestoReglaSuggest = _presupuestoNum > 0
+      ? `\n- PRESUPUESTO MÁXIMO: $${_presupuestoNum} USD por persona TOTAL — el precio_estimado de CADA opción DEBE ser ≤ $${_presupuestoNum}. ${
+          _presupuestoDiaSuggest < 100
+            ? `Con $${_presupuestoDiaSuggest}/día, OBLIGATORIO priorizar destinos económicos: LATAM (Colombia, Perú, México, Bolivia, Guatemala, Nicaragua), Europa del Este (Budapest, Praga, Varsovia, Belgrado, Bucarest). PROHIBIDOS destinos de alto costo: Hawaii, Maldivas, Seychelles, Islandia, Dubái, Tokio, Nueva York, Londres, Zurich — el vuelo+hotel básico ya supera o iguala el presupuesto total.`
+            : _presupuestoDiaSuggest < 180
+            ? `Con $${_presupuestoDiaSuggest}/día prioriza LATAM y Europa mid-range. Evita destinos conocidamente caros (Hawaii, Maldivas, Dubái, Islandia, Seychelles).`
+            : `Presupuesto suficiente para destinos premium. Propón opciones que aprovechen bien ese nivel.`
+        }`
+      : '';
+
     // ── Regla distancia/eficiencia por días ──────────────────────────────────
     const _origenNormS = (data.origen || '').toLowerCase();
     // Detección ampliada: países Y ciudades principales de LATAM
@@ -108,7 +121,7 @@ export async function POST(request) {
     const distanciaReglaSuggest = _diasNum <= 4
       ? `\n- DISTANCIA CR\u00cdTICA — SOLO ${_diasNum} D\u00cdAS: OBLIGATORIO proponer \u00daNICAMENTE destinos con m\u00e1ximo 6h de vuelo desde ${data.origen || 'el origen'}.${_esSudAmericaS ? ' (Sudam\u00e9rica, Caribe cercano, M\u00e9xico)' : ''} PROHIBIDOS destinos con vuelo >8h — el tiempo de traslado har\u00eda el viaje ineficiente. Esto NO es opcional.`
       : _diasNum <= 7
-      ? `\n- DISTANCIA CR\u00cdTICA — ${_diasNum} D\u00cdAS: OBLIGATORIO respetar estas reglas de forma estricta: (1) AL MENOS 2 DE LAS 3 OPCIONES deben tener vuelo \u22648h desde ${data.origen || 'el origen'}. (2) ABSOLUTAMENTE PROHIBIDO sugerir Jap\u00f3n, Sudeste Asi\u00e1tico (Tailandia, Vietnam, Indonesia, etc.), Ocean\u00eda (Australia, Nueva Zelanda) o cualquier destino con vuelo >12h — con ${_diasNum} d\u00edas solo quedan 3-4 d\u00edas reales en destino despu\u00e9s del tr\u00e1nsito, lo que hace el viaje inviable. (3) Europa del Oeste es el l\u00edmite m\u00e1ximo SOLO si encaja claramente con los intereses, e IMPRESCINDIBLE indicar en "por_que" cu\u00e1ntos d\u00edas reales quedan en destino. (4) Si el usuario tiene inter\u00e9s expl\u00edcito en Asia u Ocean\u00eda, recomendar igual un destino cercano que satisfaga ese inter\u00e9s (ej: inter\u00e9s en culturas asi\u00e1ticas → M\u00e9xico con influencia oriental, o Canarias, no Tokio).`
+      ? `\n- DISTANCIA CR\u00cdTICA — ${_diasNum} D\u00cdAS: OBLIGATORIO respetar estas reglas de forma estricta: (1) AL MENOS 2 DE LAS 3 OPCIONES deben tener vuelo \u22648h desde ${data.origen || 'el origen'}. (2) ABSOLUTAMENTE PROHIBIDO sugerir Jap\u00f3n, Sudeste Asi\u00e1tico (Tailandia, Vietnam, Indonesia, etc.), Ocean\u00eda (Australia, Nueva Zelanda), Hawaii o cualquier destino con vuelo >9h desde ${data.origen || 'el origen'} — con ${_diasNum} d\u00edas solo quedan 3-4 d\u00edas reales en destino despu\u00e9s del tr\u00e1nsito, lo que hace el viaje inviable. (3) Europa del Oeste es el l\u00edmite m\u00e1ximo SOLO si encaja claramente con los intereses, e IMPRESCINDIBLE indicar en "por_que" cu\u00e1ntos d\u00edas reales quedan en destino. (4) Si el usuario tiene inter\u00e9s expl\u00edcito en Asia u Ocean\u00eda, recomendar igual un destino cercano que satisfaga ese inter\u00e9s (ej: inter\u00e9s en culturas asi\u00e1ticas → M\u00e9xico con influencia oriental, o Canarias, no Tokio).`
       : _diasNum <= 11
       ? `\n- DISTANCIA — ${_diasNum} D\u00cdAS: PROHIBIDOS Ocean\u00eda y Asia muy lejana (>16h de vuelo). Para destinos de 12-14h (Jap\u00f3n, Sudeste Asi\u00e1tico): solo incluirlos si los intereses del viajero los justifican claramente, e incluir en "por_que" los d\u00edas reales disponibles en destino.`
       : '';
@@ -123,7 +136,7 @@ PERFIL DEL VIAJERO:
 - Tipo de viajero: ${tipoViajero} (${data.numViajeros} personas)
 - Intereses EN PRIORIDAD: ${interesesTexto}
 - Ritmo preferido: ${ritmoTexto}
-- Alojamiento preferido: ${alojTexto}${familiaCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${restriccionCtxSuggest}${experienciaCtxSuggest}${distanciaReglaSuggest}
+- Alojamiento preferido: ${alojTexto}${familiaCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${restriccionCtxSuggest}${experienciaCtxSuggest}${presupuestoReglaSuggest}${distanciaReglaSuggest}
 
 REGLAS:
 - Variedad: las 3 opciones deben ser destinos diferentes entre sí (diferentes regiones o países)
@@ -137,7 +150,8 @@ REGLAS:
 - El presupuesto es por persona
 - Considera que un vuelo largo consume días reales del viaje (vuelo >8h = 1 día perdido por tramo; vuelo >12h = 2 días perdidos)
 - Calcula y completa el campo "dias_reales_en_destino" = días totales - días perdidos en tránsito (ida + vuelta). Ejemplo: 7 días con vuelo 13h = 7 - 2 = 5 días reales
-${_diasNum <= 7 ? `- REGLA DE DISTANCIA OBLIGATORIA (${_diasNum} días): RECHAZA Japón, Australia, Nueva Zelanda, Sudeste Asiático o cualquier destino con vuelo >12h. MÍNIMO 2 de tus 3 opciones deben tener vuelo ≤8h desde ${data.origen || 'el origen'}. Esta regla es ABSOLUTA y no admite excepciones.` : _diasNum <= 4 ? `- REGLA DE DISTANCIA OBLIGATORIA (${_diasNum} días): SOLO destinos con vuelo ≤6h. RECHAZA cualquier destino con vuelo >6h. Esta regla es ABSOLUTA.` : ''}
+${_diasNum <= 4 ? `- REGLA DE DISTANCIA OBLIGATORIA (${_diasNum} días): SOLO destinos con vuelo ≤6h. RECHAZA cualquier destino con vuelo >6h. Esta regla es ABSOLUTA.` : _diasNum <= 7 ? `- REGLA DE DISTANCIA OBLIGATORIA (${_diasNum} días): RECHAZA Japón, Australia, Nueva Zelanda, Sudeste Asiático, Hawaii o cualquier destino con vuelo >9h desde ${data.origen || 'el origen'}. MÍNIMO 2 de tus 3 opciones deben tener vuelo ≤8h. Esta regla es ABSOLUTA y no admite excepciones.` : ''}
+- PRESUPUESTO ESTRICTO: el precio_estimado de CADA opción debe ser ≤ $${data.presupuesto} USD. Calcula realísticamente vuelo (ida+vuelta desde ${data.origen}) + hotel (${data.dias} noches) + actividades antes de proponer.
 
 Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
 {
