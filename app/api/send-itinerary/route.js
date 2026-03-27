@@ -957,14 +957,19 @@ DEBES:
       ? `\n- RESTRICCI�N ALIMENTARIA: ${restriccionDescMap[formData.restriccionDietaria]}`
       : '';
 
-    // -- Horario preferido -----------------------------------------------------
-    const horarioDescMap = {
-      'madrugador': 'MADRUGADOR � el viajero arranca a las 7am. Actividades de ma�ana desde las 7-8h (ventaja: atracciones antes de multitudes). Incluye desayunos tempranos. Los d�as terminan relativamente temprano.',
-      'nocturno':   'NOCT�MBULO � no programes nada antes de las 11am. Ma�ana libre o de descanso. La tarde y noche son el peak de actividad. Incluye opciones de brunch en lugar de desayuno. Los d�as se extienden hasta tarde.',
-    };
-    const horarioCtx = formData.horarioPreferido && horarioDescMap[formData.horarioPreferido]
-      ? `\n- HORARIO PREFERIDO: ${horarioDescMap[formData.horarioPreferido]}`
-      : '';
+    // -- Horario inferido desde otros campos (no hay pregunta directa) --------
+    const horarioInferido = (() => {
+      const ints = Array.isArray(formData.intereses) ? formData.intereses : [];
+      if (ints[0] === 'nocturna') return 'nocturno';
+      if (formData.tipoViaje === 'familia' && (formData.numNinos || 0) > 0) return 'madrugador';
+      if ((formData.tipoViaje || '').toLowerCase().includes('empresa') || (formData.tipoViaje || '').toLowerCase().includes('corporat')) return 'madrugador';
+      return 'normal';
+    })();
+    const horarioCtx = horarioInferido === 'madrugador'
+      ? `\n- HORARIO: Arranca actividades a las 7-8am. Incluye desayunos tempranos. Ventaja: atracciones antes de multitudes.`
+      : horarioInferido === 'nocturno'
+      ? `\n- HORARIO: Interés principal en vida nocturna — no programes nada antes de las 11am. Mañana libre o descanso. Brunch en lugar de desayuno. Actividades se extienden hasta tarde.`
+      : `\n- HORARIO: Arranque a las 9-10am. Almuerzo 13-14h. Cena 20-21h. Incluye tiempos de descanso entre bloques de actividad.`;
 
     // -- Aerol�nea preferida / programa de millas ------------------------------
     const aerolineaDescMap = {
@@ -989,23 +994,37 @@ DEBES:
       ? `\n- DISTRIBUCI�N DE PRESUPUESTO: ${prioridadDescMap[formData.prioridadGasto]}`
       : '';
 
-    // -- Perfil de viajero (3 niveles) ----------------------------------------
-    const esExperto = formData.primeraVisita === false || formData.experienciaViajero === 'frecuente';
-    const esIntermedio = !esExperto && formData.experienciaViajero === 'algunas-veces';
-    const esNovato = formData.primeraVisita === true || formData.experienciaViajero === 'primera-vez';
+    // -- Niveles de familiaridad con el destino (4 niveles) -------------------
+    const visitasVal = formData.primeraVisita;
+    // Compatibilidad legacy (boolean anterior) + nuevos strings
+    const visitasNorm = visitasVal === true ? 'primera-vez'
+                      : visitasVal === false ? '1-2-veces'
+                      : (visitasVal || null);
 
-    const primeraVisitaCtx = esExperto
+    const esRegular    = visitasNorm === 'regularmente';
+    const esVeterano   = visitasNorm === '3-5-veces';
+    const esReincidente = visitasNorm === '1-2-veces';
+    const esPrimeraVez = !esRegular && !esVeterano && !esReincidente;
+
+    const esViajeroPro   = formData.experienciaViajero === 'frecuente';
+    const esViajeroMedio = formData.experienciaViajero === 'algunas-veces';
+    const esViajeroNovato = formData.experienciaViajero === 'primera-vez';
+
+    const primeraVisitaCtx = esRegular
       ? `
-- PERFIL EXPLORADOR EXPERTO � YA CONOCE EL DESTINO Y/O VIAJERO FRECUENTE: Esta regla es la m�s importante del itinerario y PREVALECE sobre cualquier otra l�gica.
-  ESTRICTAMENTE PROHIBIDO como actividades principales: los top-10 tur�sticos masivos del destino (Eiffel en Par�s, Colosseum en Roma, Sagrada Fam�lia en Barcelona, Big Ben en Londres, etc.). Si aparecen, solo como menci�n de contexto, NUNCA como actividad central del d�a.
-  OBLIGATORIO en cambio: (1) Barrios locales aut�nticos que los turistas no descubren � con nombres reales y espec�ficos. (2) Restaurantes donde comen los locales: sin men� en ingl�s, sin fotos en el men�, sin rese�as masivas en TripAdvisor o Google. (3) Mercados populares, talleres de artesanos, galer�as underground, proyectos culturales independientes. (4) Experiencias de nicho que requieren conocimiento previo: rutas ciclistas locales, clubes de jazz peque�os, mercados de pulgas, bares sin se�al�tica exterior. (5) Horarios anti-turista: entrar a un sitio emblem�tico a las 7am antes de las hordas, o visitarlo en temporada baja. Si hay un �cono absolutamente imprescindible del destino, incluirlo de forma no tur�stica (acceso especial, punto de vista alternativo, contexto hist�rico profundo). Tono: de igual a igual, viajero experimentado habl�ndole a otro igual � sin explicaciones b�sicas de transporte, sin mapas obvios, sin frases de gu�a tur�stico.`
-      : esIntermedio
+- PERFIL LOCAL — CONOCE ESTE DESTINO MUY BIEN (visita regular/5+ veces): Esta es la regla más prioritaria del itinerario y PREVALECE sobre cualquier otra.
+  ABSOLUTAMENTE PROHIBIDO mencionar cualquier atracción turística, aunque sea "de forma diferente": nada de Colosseum, Eiffel, Sagrada Família, Big Ben ni equivalentes en cualquier destino.
+  OBLIGATORIO: (1) Actividades que solo hacen los residentes: mercados de barrio sin turistas, asociaciones culturales locales, eventos de temporada que no aparecen en TripAdvisor, rutas de running o ciclismo locales, parques donde va la gente del barrio. (2) Restaurantes sin presencia masiva en Google Maps, donde el menú está solo en el idioma local y los precios son para locales — no para turistas. (3) Horarios y lugares que solo conocen quienes viven ahí: el bar que abre solo los jueves, el mercado que es el primer domingo del mes, la playa sin nombre que los locales guardan. (4) Barrios o suburbs que los turistas jamás visitan pero que tienen vida real y carácter. Tono: de par a par, como si le hablaras a alguien que conoce bien el destino y quiere redescubrirlo desde dentro.`
+      : esVeterano
       ? `
-- PERFIL VIAJERO INTERMEDIO � YA VIAJ� ANTES, CONOCE LO B�SICO: Mezcla estrat�gica � m�ximo 30% �conos cl�sicos (vividos de forma menos tur�stica: acceso especial, horario temprano, perspectiva local) + 70% experiencias aut�nticas. Evita tours masivos y restaurantes en zonas 100% tur�sticas. Incluye al menos 1 barrio fuera del circuito tur�stico habitual y al menos 1 experiencia que salga de la zona de confort (clase de cocina local, visita a un mercado popular, taller artesanal). Tono: compa�ero de viaje experimentado, no gu�a tur�stico.`
-      : esNovato
+- PERFIL EXPLORADOR EXPERTO — HA IDO VARIAS VECES (3-5 visitas): Esta regla prevalece sobre cualquier otra.
+  PROHIBIDOS como actividades principales los top-10 turísticos masivos del destino. Solo como contexto ocasional si es inevitable.
+  OBLIGATORIO: (1) Barrios locales auténticos que los turistas no descubren — con nombres reales y específicos. (2) Restaurantes donde comen los locales: sin menú en inglés, sin fotos en el menú. (3) Mercados populares, talleres de artesanos, galerías underground, proyectos culturales independientes. (4) Experiencias de nicho que requieren conocimiento previo: rutas ciclistas locales, clubes de jazz pequeños, mercados de pulgas, bares sin señalética exterior. (5) Horarios anti-turista: entrar a un sitio a las 7am antes de las hordas. Tono: viajero experimentado hablándole a otro igual — sin explicaciones básicas.`
+      : esReincidente
       ? `
-- PERFIL EXPLORADOR CURIOSO � PRIMERA VEZ EN ESTE TIPO DE DESTINO: Incluye los imperdibles cl�sicos � son cl�sicos por razones v�lidas y este viajero no los conoce. Equilibra �conos tur�sticos con al menos 1-2 experiencias aut�nticas locales por ciudad. Explica el contexto cultural b�sico de cada lugar (por qu� es importante, qu� esperar, qu� no hacer). Tips pr�cticos imprescindibles: c�mo llegar del aeropuerto, propinas locales, costumbres que sorprenden, apps �tiles. Tono: gu�a amigable, orientador y emp�tico con quien viaja por primera vez.`
-      : '';
+- PERFIL VIAJERO REINCIDENTE — HA IDO 1-2 VECES: Máximo 20% íconos clásicos vividos de forma no turística (acceso especial, horario temprano, perspectiva local) + 80% experiencias auténticas. Evita tours masivos y restaurantes en zonas 100% turísticas. Incluye al menos 1 barrio fuera del circuito habitual y al menos 2 experiencias que el viajero no habría hecho en su primera visita. Tono: compañero de viaje con experiencia, no guía turístico.`
+      : `
+- PERFIL EXPLORADOR CURIOSO — PRIMERA VEZ: Incluye los imperdibles clásicos — son clásicos por razones válidas y este viajero no los conoce. Equilibra íconos turísticos con al menos 1-2 experiencias auténticas locales por ciudad. Explica el contexto cultural básico de cada lugar. Tips prácticos imprescindibles: cómo llegar del aeropuerto, propinas locales, costumbres que sorprenden, apps útiles. Tono: guía amigable, orientador y empático con quien viaja por primera vez.`;
 
 
     // -- Movilidad reducida ----------------------------------------------------
@@ -1019,7 +1038,13 @@ DEBES:
     const _esSudAmerica = ['chile','argentina','per�','peru','colombia','brasil','brazil','bolivia','ecuador','uruguay','venezuela','paraguay'].some(p => _origenNorm.includes(p));
     const _maxVuelo = dias <= 4 ? 6 : dias <= 7 ? 10 : dias <= 11 ? 14 : 99;
     const distanciaCtx = (_esSudAmerica && _maxVuelo < 99)
-      ? `\n- EFICIENCIA DE VUELO: El viaje es de solo ${dias} d�as. El vuelo m�ximo RECOMENDADO desde ${formData.origen || 'Chile'} es ${_maxVuelo}h por tramo.${dias <= 4 ? ' Para 4 d�as o menos, los destinos viables son: Sudam�rica, Caribe cercano, M�xico. PROHIBIDO recomendar Europa, Asia, Ocean�a.' : dias <= 7 ? ' Para 7 d�as, el vuelo a Jap�n o Sudeste Asi�tico (14h+) consume 3-4 d�as reales en transporte. Evitar. Europa y EE.UU. son el l�mite. Si el destino ya fue elegido y supera 10h de vuelo, advertir en resumen.nota_importante cu�ntos d�as reales quedan disponibles.' : ' Para 11 d�as, Ocean�a y Asia lejana (16h+) son el l�mite. Incluir en resumen.nota_importante el tiempo real de viaje si aplica.'}`
+      ? `\n- EFICIENCIA DE VUELO: El viaje es de ${dias} días desde ${formData.origen || 'Chile'} (vuelo máximo razonable: ${_maxVuelo}h por tramo).${
+          dias <= 4
+            ? ' PROHIBIDO recomendar Europa, Asia, Oceanía — con 4 días o menos solo son viables Sudamérica, Caribe cercano y México.'
+            : dias <= 7
+            ? ` Con 7 días, un vuelo de 12-13h (ej: Chile→Europa) deja solo ~4 días reales en destino. PROHIBIDO Japón (14h+), Sudeste Asiático (16h+) y Oceanía (16h+) si el usuario no los eligió explícitamente. Si el destino elegido supera 10h de vuelo, OBLIGATORIO incluir en resumen.distribucion: "⚠️ Con ${dias} días y ~Xh de vuelo contarás con Y días reales en destino — optimizamos el itinerario para aprovecharlos al máximo."`
+            : ' Con 11 días, Oceanía y Asia muy lejana (16h+) son el límite máximo. OBLIGATORIO incluir en resumen.distribucion el tiempo real disponible si el vuelo supera 14h.'
+        }`
       : '';
 
     // -- clienteCtx completo ---------------------------------------------------
@@ -1033,7 +1058,7 @@ DATOS DEL CLIENTE:
 - Tipo de viajero: ${formData.tipoViaje || 'pareja'}${formData.ocasionEspecial && formData.ocasionEspecial !== 'sin-ocasion' ? ` � ${formData.ocasionEspecial.replace(/-/g, ' ')}` : ''}
 - N�mero de viajeros: ${formData.numViajeros || 2}${formData.tipoViaje === 'familia' && (formData.numNinos || 0) > 0 ? ` (${formData.numNinos} ni�o${formData.numNinos > 1 ? 's' : ''} + ${(formData.numViajeros || 2) - (formData.numNinos || 0)} adulto${(formData.numViajeros || 2) - (formData.numNinos || 0) !== 1 ? 's' : ''})` : ''}
 - Intereses EN ORDEN DE PRIORIDAD: ${interesesConPeso}
-- Ritmo: ${formData.ritmo <= 2 ? 'Relajado (max 2 actividades/d�a)' : formData.ritmo <= 3 ? 'Moderado (2-3 actividades)' : 'Intenso (3-4 actividades)'}
+- Ritmo: ${ritmoEfectivo <= 2 ? 'Relajado (max 2 actividades/día)' : ritmoEfectivo <= 3 ? 'Moderado (2-3 actividades)' : 'Intenso (3-4 actividades)'}${ritmoEfectivo !== (formData.ritmo || 3) ? ` (ajustado de ${formData.ritmo}/5 por ocasión especial)` : ''}
 - Alojamiento preferido: ${formData.alojamiento || 'hotel'}${ocasionCtx}${restriccionCtx}${horarioCtx}${aerolineaCtx}${prioridadCtx}${primeraVisitaCtx}${movilidadCtx}${distanciaCtx}
 ${budgetWarning}
 Hoy es ${today}. Los precios, vuelos y datos de alojamiento deben ser realistas para esta fecha.
@@ -1057,6 +1082,24 @@ Para origen_iata y destino_iata: c�digo IATA de 3 letras del aeropuerto princi
       ? `- CHECKLIST PERSONALIZADO: Para los �tems del checklist, usa OBLIGATORIAMENTE esta informaci�n verificada sobre los requisitos del viaje desde ${formData.origen || 'Chile'} hacia ${formData.destino}:\n${travelContext}\nEstos �tems DEBEN aparecer literalmente en el checklist (no los parafrasees ni inventes informaci�n diferente). Completa el resto con �tems pr�cticos de preparativos: contratar seguro de viaje, llevar efectivo en la moneda local, confirmar reservas de vuelo y alojamiento, descargar apps �tiles (Google Maps offline, Uber, traductor), ropa adecuada al clima del destino. Total: 8-10 �tems concisos y accionables.`
       : '';
 
+    // -- Ritmo efectivo: ocasión especial puede suavizar ritmo elegido ----------
+    const ritmoEfectivo = (() => {
+      const oc = formData.ocasionEspecial || '';
+      if ((oc === 'luna-de-miel' || oc === 'aniversario') && (formData.ritmo || 3) > 3) return 3;
+      return formData.ritmo || 3;
+    })();
+
+    // -- Presupuesto por día ---------------------------------------------------
+    const presupuestoDia = Math.round(presupuesto / dias);
+    const presupuestoDiaRule = `\n- PRESUPUESTO DIARIO: $${presupuestoDia} USD/persona/día (= $${presupuesto} total / ${dias} días). Adapta la calidad de CADA recomendación a esta realidad:${
+      presupuestoDia < 80
+        ? ' Menos de $80/día → alojamiento hostal o Airbnb económico, comidas en mercados y callejero, tours gratuitos o grupales básicos, sin actividades premium.'
+        : presupuestoDia < 150
+        ? ' $80-150/día → hotel 3★ o Airbnb confort, mezcla callejero + restaurantes mid-range, tours grupales con alguna experiencia especial.'
+        : presupuestoDia < 250
+        ? ' $150-250/día → hotel 4★, cenas en restaurantes de calidad, tours privados opcionales, al menos 1 experiencia premium por viaje.'
+        : ' $250+/día → hotel 4-5★ o boutique, cenas selectas, experiencias premium y privadas como primera opción.'}
+    Aplica esta lógica en alojamiento, restaurantes y actividades. Un presupuesto de $${presupuestoDia}/día NO permite cenar en restaurante de $80/persona cada noche.`;
     // -- Regla OPTIMIZACI�N GEOGR�FICA ----------------------------------------
     const geoRule = `- OPTIMIZACI�N GEOGR�FICA DE RUTA: (1) Para viajes MULTI-DESTINO: ordena las ciudades/pa�ses de forma geogr�ficamente l�gica para minimizar distancias y tiempos de traslado. Nunca plantees rutas que obliguen a retroceder innecesariamente (ej: si visitas Madrid, Barcelona y Lisboa, no vayas Madrid?Lisboa?Barcelona). (2) Para el d�a a d�a de CADA CIUDAD: agrupa las actividades por zona geogr�fica. Ma�ana: zona norte o centro. Tarde: zona sur o cercana. Nunca propongas en el mismo d�a visitar atracciones en extremos opuestos de la ciudad sin l�gica de desplazamiento. Siempre incluye en "ruta_optimizada" el orden sugerido para minimizar traslados. (3) Para vuelos: prioriza conexiones l�gicas (no escalas en direcci�n contraria al destino).`;
 
@@ -1118,7 +1161,20 @@ Para origen_iata y destino_iata: c�digo IATA de 3 letras del aeropuerto princi
       primeraVisitaCtx ? primeraVisitaCtx.replace('\n- ', '- ') : '',
       // Nombre del viajero � usado 1 vez por d�a en un momento clave
       formData.nombre ? `- PERSONALIZACI�N NOMBRE: El viajero se llama ${formData.nombre}. Usa su nombre de forma natural exactamente 1 vez por d�a dentro de la descripci�n de una actividad en el campo "descripcion", en un momento emotivo o clave del itinerario. No lo uses en cada p�rrafo ni de forma repetitiva. Debe sonar humano y c�lido. Ejemplos v�lidos: "Esta tarde, ${formData.nombre}, es el momento perfecto para perderte en el barrio hist�rico..." o "Esta noche es especial, ${formData.nombre} � reserva mesa con vista al mar en..."` : '',
-    ].filter(Boolean).join('\n');
+      // Presupuesto por día
+      presupuestoDiaRule,
+      // Temporada y clima
+      formData.mesViaje
+        ? `- TEMPORADA Y CLIMA: El viajero va en ${formData.mesViaje.replace('-', ' ')}. OBLIGATORIO adaptar las actividades del día a día al clima real de ese mes en ${formData.destino || 'el destino'}: (1) Calor extremo → actividades de exterior en mañana temprana o al atardecer, mediodía en espacios cubiertos o acuosos. (2) Lluvia frecuente → incluir alternativas cubiertas para cada día, no solo plan_b. (3) Temporada alta → mencionar en cada atracción si necesita reserva anticipada y con cuánta antelación. (4) Festividades o eventos relevantes en esas fechas → priorizarlos como actividades. (5) Actividades estacionales → incluirlas si aplica (playa en verano, esqui en invierno, vendimia en otoño, cerezos en abril en Japón, etc.).`
+        : '',
+      // Distribución de ciudades según intereses (multi-destino)
+      interesesArray.length > 0
+        ? `- DISTRIBUCIÓN DE CIUDADES: En viajes multi-destino, selecciona ciudades que MAXIMICEN el interés principal (${interesesArray[0]}). Ejemplos: interés 'playa' → prioriza ciudades costeras sobre capitales interiores; 'cultura' → ciudades con patrimonio y museos; 'gastronomía' → ciudades con identidad culinaria reconocida; 'aventura' → destinos con naturaleza y deportes; 'naturaleza' → parques nacionales y reservas sobre ciudades. No distribuyas días equitativamente si una ciudad encaja mucho mejor con los intereses.`
+        : '',
+      // Restricción dietaria fuerte en restaurantes Y en selección de zona
+      formData.restriccionDietaria && formData.restriccionDietaria !== 'sin-restriccion'
+        ? `- RESTRICCIÓN DIETARIA ESTRICTA (${formData.restriccionDietaria.toUpperCase()}): NO es solo un filtro de restaurantes — afecta también la selección de barrios y mercados. Prioriza zonas con oferta diversa. Para veganos: barrios con cultura plant-based; para halal: zonas con comunidad musulmana o restaurantes certificados; para sin-gluten: menciona en tips_culturales cómo comunicarlo en el idioma local. TODOS los restaurantes recomendados deben tener opciones claras para esta restricción — sin excepciones.`
+        : '',    ].filter(Boolean).join('\n');
 
     // -- Regla ALOJAMIENTO seg�n preferencia ---------------------------------
     const alojRule = alojPref === 'hostal'
@@ -1246,7 +1302,7 @@ ${alojRule}
 - PRESUPUESTO: El presupuesto indicado ($${presupuesto} USD) es el TOTAL por persona para TODO el viaje. El campo presupuesto_desglose.total NO debe superar ese valor. Adapta vuelos, alojamiento y actividades a esa realidad. Si el presupuesto es insuficiente para el destino elegido, usa el campo resumen.ritmo para incluir una nota como "?? Presupuesto ajustado � hemos optimizado el itinerario para sacar el m�ximo con tu presupuesto."
 - PRECIOS "por persona": Cada vez que menciones un precio (vuelos, hotel, actividades, restaurantes, presupuesto desglosado, gasto_dia, costo) agrega siempre "/ persona" al final del valor. Ejemplo: "$120 / persona". Aplica a TODOS los campos de precio del JSON sin excepcion.
 ${diasRule}
-- RITMO: El cliente eligi� ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el n�mero de actividades por d�a: ritmo 1-2 = m�ximo 2 actividades por d�a (d�as relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por d�a con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por d�a, d�as aprovechados al m�ximo. El ritmo tambi�n afecta el tono: ritmo bajo = m�s descripci�n contemplativa, ritmo alto = m�s din�mico y energ�tico.
+- RITMO: Ritmo efectivo ${ritmoEfectivo}/5. DEBES respetar ESTRICTAMENTE el n� ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el n�mero de actividades por d�a: ritmo 1-2 = m�ximo 2 actividades por d�a (d�as relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por d�a con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por d�a, d�as aprovechados al m�ximo. El ritmo tambi�n afecta el tono: ritmo bajo = m�s descripci�n contemplativa, ritmo alto = m�s din�mico y energ�tico.
 ${reglasPersonalizacion}
 ${tipoViajeRule}
 - AEROL�NEAS: SOLO recomienda aerol�neas de esta lista verificada: LATAM, JetSmart, Sky Airline, Avianca, Copa Airlines, Aerol�neas Argentinas, Aerom�xico, GOL, Azul, American Airlines, United Airlines, Delta, Air Canada, WestJet, Iberia, Iberia Express, Air Europa, Turkish Airlines, Air France, KLM, Lufthansa, Swiss, Austrian Airlines, British Airways, TAP Portugal, Norwegian, EasyJet, Ryanair, Finnair, ITA Airways, Qatar Airways, Emirates, Ethiopian Airlines, Japan Airlines, ANA, Singapore Airlines, Cathay Pacific, Korean Air, Asiana, Thai Airways, Malaysia Airlines, Air New Zealand, EVA Air, China Airlines. NO recomiendes aerol�neas que no est�n en esta lista.
@@ -1378,7 +1434,7 @@ ${alojRule}
 - PRESUPUESTO: El presupuesto indicado ($${presupuesto} USD) es el TOTAL por persona para TODO el viaje. El campo presupuesto_desglose.total NO debe superar ese valor. Adapta todas las recomendaciones (vuelos, alojamiento, actividades, restaurantes) a esa realidad. Si el presupuesto es insuficiente para el destino elegido, usa resumen.ritmo para incluir una nota como "?? Presupuesto ajustado � optimizamos el itinerario para sacar el m�ximo con tu presupuesto."
 - PRECIOS "por persona": Cada vez que menciones un precio (vuelos, hotel, actividades, restaurantes, presupuesto desglosado, gasto_dia, costo) agrega siempre "/ persona" al final del valor. Ejemplo: "$120 / persona". Aplica a TODOS los campos de precio del JSON sin excepcion.
 ${diasRule}
-- RITMO: El cliente eligi� ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el n�mero de actividades por d�a: ritmo 1-2 = m�ximo 2 actividades por d�a (d�as relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por d�a con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por d�a, d�as aprovechados al m�ximo. El ritmo tambi�n afecta el tono: ritmo bajo = m�s descripci�n contemplativa, ritmo alto = m�s din�mico y energ�tico.
+- RITMO: Ritmo efectivo ${ritmoEfectivo}/5. DEBES respetar ESTRICTAMENTE el n� ritmo ${formData.ritmo || 3}/5. DEBES respetar ESTRICTAMENTE el n�mero de actividades por d�a: ritmo 1-2 = m�ximo 2 actividades por d�a (d�as relajados, pausas largas, tiempo libre); ritmo 3 = exactamente 2-3 actividades por d�a con tiempo libre entre ellas; ritmo 4-5 = 3-4 actividades por d�a, d�as aprovechados al m�ximo. El ritmo tambi�n afecta el tono: ritmo bajo = m�s descripci�n contemplativa, ritmo alto = m�s din�mico y energ�tico.
 ${reglasPersonalizacion}
 ${tipoViajeRule}
 - AEROL�NEAS: SOLO recomienda aerol�neas de esta lista verificada: LATAM, JetSmart, Sky Airline, Avianca, Copa Airlines, Aerol�neas Argentinas, Aerom�xico, GOL, Azul, American Airlines, United Airlines, Delta, Air Canada, WestJet, Iberia, Iberia Express, Air Europa, Turkish Airlines, Air France, KLM, Lufthansa, Swiss, Austrian Airlines, British Airways, TAP Portugal, Norwegian, EasyJet, Ryanair, Finnair, ITA Airways, Qatar Airways, Emirates, Ethiopian Airlines, Japan Airlines, ANA, Singapore Airlines, Cathay Pacific, Korean Air, Asiana, Thai Airways, Malaysia Airlines, Air New Zealand, EVA Air, China Airlines. NO recomiendes aerol�neas fuera de esta lista.
