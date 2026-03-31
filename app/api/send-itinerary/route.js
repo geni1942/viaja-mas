@@ -1458,87 +1458,45 @@ DEBES:
     // Esta es la capa de personalización más profunda: combina CUÁNTO viaja la persona
     // con CUÁNTO conoce este destino específico → define todo el tono + selección de lugares
     const experienciaViajeroCtx = (() => {
-      if (esViajeroPro && esRegular) return `
-- PERFIL ÉLITE LOCAL: Viaja frecuentemente a muchos destinos Y conoce muy bien ESTE destino específico. Esta regla es la más prioritaria de todas y PREVALECE sobre cualquier otra.
-  Actividades: CERO atracciones turísticas. Solo lo que hacen los residentes: rutas de trail o ciclismo que usa la gente del barrio, mercados de productores donde compran los chefs locales, asociaciones culturales, eventos de temporada sin presencia en TripAdvisor.
-  Restaurantes: sin menú en inglés, sin fotos en carta, precios para locales. El tipo de lugar al que llevarías a un amigo que vive ahí.
-  Experiencias: actividades de nicho que requieren conocimiento previo (club de jazz underground, mercado que abre solo el primer domingo del mes, playa sin nombre que los locales guardan).
-  Tips: del nivel que solo sabe alguien que ha vivido ahí — no expliques nada básico.
-  Tono: de par a par, como si hablaras con alguien que ya sabe y quiere redescubrir desde dentro.`;
-      if (esViajeroPro && esVeterano) return `
-- PERFIL EXPLORADOR ÉLITE: Viaja frecuentemente y ha estado varias veces en este destino. Nivel de profundidad máximo sin llegar al 100% local.
-  Actividades: prohibidos top-10 turísticos como actividad principal. Barrios específicos con nombre real que los turistas no encuentran. Horarios anti-turista (7am en un sitio antes de las hordas).
-  Restaurantes: sin guías turísticas — el tipo de local donde la carta está solo en el idioma local y los precios no tienen decimales.
-  Experiencias: de nicho real — talleres de artesanos, galerías underground, deportes locales.
-  No expliques nada obvio — este viajero sabe moverse. Tono: colega experto hablándole a otro.`;
-      if (esViajeroPro && esReincidente) return `
-- PERFIL VIAJERO ACTIVO REINCIDENTE: Viaja frecuentemente pero ha estado aquí solo 1-2 veces. La ventaja es que puede con ritmos exigentes y no necesita orientación básica.
-  30% clásicos vividos de forma diferente (entrada anticipada, perspectiva no turística) + 70% descubrimientos nuevos auténticos.
-  Evita tours de autobús y restaurantes en la primera línea turística. Al menos 1 barrio fuera del circuito habitual.
-  Tono: compañero de viaje experimentado, sin sobreexplicar.`;
-      if (esViajeroPro && esPrimeraVez) return `
-- PERFIL EXPLORADOR EXPERIMENTADO — PRIMERA VEZ AQUÍ: Viaja mucho pero no conoce este destino. No necesita explicaciones básicas de viaje (no expliques qué es un hostel o cómo funciona un metro), pero sí contexto específico del destino.
-  Puede con itinerario exigente y ritmo alto. Mezcla imperdibles del destino (es la primera vez aquí y los merece) con al menos 2-3 descubrimientos que un viajero casual nunca encontraría.
-  Restaurantes: puede con mezcla de calidad media-alta, sin carta en inglés no es problema.
-  Tono: como hablarle a alguien que sabe viajar pero llega virgen a este lugar específico.`;
-      if (esViajeroMedio && esRegular) return `
-- PERFIL CONOCEDOR DEL DESTINO: Viaja con cierta frecuencia y conoce bien este destino. Equilibrio: 40% nuevos descubrimientos auténticos + 60% favoritos revisitados desde otro ángulo.
-  Tono: amigo que sabe más que tú sobre este lugar específico. No sobre-expliques lo obvio.`;
-      if (esViajeroMedio && (esVeterano || esReincidente)) return `
-- PERFIL VIAJERO CON CRITERIO: Tiene experiencia viajando y ya conoce este destino. Evita lo más trillado turísticamente. Mezcla buenos descubrimientos con algunas visitas clásicas bien elegidas.
-  Tono: orientado pero sin infantilizar.`;
-      if (esViajeroNovato && esPrimeraVez) return `
-- PERFIL DEBUT ABSOLUTO: Primera vez viajando de esta forma Y primera vez en este destino. Orientación máxima en todo: cómo llegar del aeropuerto, cómo funciona el transporte local, qué costumbres sorprenden a los recién llegados, qué apps son indispensables.
-  Experiencias: tours guiados grupales antes que aventuras independientes. Restaurantes con carta visual o en español/inglés. Alojamiento céntrico para moverse fácil.
-  Tono: amigo empático que está contigo en cada paso, nunca asume conocimiento previo.`;
-      if (esViajeroNovato) return `
-- PERFIL VIAJERO NUEVO: Experiencia limitada en viajes. Incluye orientación práctica en cada actividad, no solo la recomendación. Tours guiados antes que exploración independiente. Tips claros sobre cómo moverse, qué evitar, cómo pagar.
-  Tono: guía paciente y empático, sin asumir nada.`;
+      if (esViajeroPro && esRegular) return `- ELITE LOCAL: Viaja frecuente Y conoce bien ESTE destino. PRIORIDAD MAXIMA. Cero atracciones turisticas. Solo actividades/restaurantes de residentes, eventos sin TripAdvisor. Tono: par a par.`;
+      if (esViajeroPro && esVeterano) return `- ELITE EXPLORADOR: Viaja frecuente, 3-5x en este destino. Prohibido top-10 turistico. Barrios locales reales, restaurantes locales, experiencias de nicho. Tono: colega experto.`;
+      if (esViajeroPro && esReincidente) return `- VIAJERO ACTIVO REINCIDENTE: Frecuente pero 1-2x aqui. 30% clasicos nueva perspectiva + 70% descubrimientos autenticos. Sin tours de autobus. Tono: companero sin sobreexplicar.`;
+      if (esViajeroPro && esPrimeraVez) return `- EXPLORADOR EXPERIMENTADO, PRIMERA VEZ AQUI: Sabe viajar pero no conoce este destino. No expliques basicos. Mezcla imperdibles con 2-3 descubrimientos que un turista casual no encontraria.`;
+      if (esViajeroMedio && esRegular) return `- CONOCEDOR DEL DESTINO: Frecuencia media, conoce bien este lugar. 40% descubrimientos + 60% favoritos desde otro angulo. No sobre-expliques lo obvio.`;
+      if (esViajeroMedio && (esVeterano || esReincidente)) return `- VIAJERO CON CRITERIO: Experiencia media, ya conoce el destino. Evita lo mas trillado. Mezcla descubrimientos con clasicos bien elegidos.`;
+      if (esViajeroNovato && esPrimeraVez) return `- DEBUT ABSOLUTO: Primera vez viajando Y primera vez aqui. Orientacion maxima: aeropuerto, transporte, costumbres. Tours guiados. Restaurantes con carta visual. Tono: amigo empatico paso a paso.`;
+      if (esViajeroNovato) return `- VIAJERO NUEVO: Experiencia limitada. Orientacion practica, tours guiados, tips de movilidad y seguridad. Tono: guia paciente.`;
       return '';
     })();
 
     // -- Cruces de señales: combinaciones que generan reglas específicas --------
     // Cuando dos preferencias se combinan crean un perfil único que ninguna regla
     // individual captura. Estas reglas son las más personalizadoras del sistema.
+    // -- Cruces de senales -------------------------------------------------
     const crucesSenales = (() => {
       const reglas = [];
-
-      // SOLO + VIDA NOCTURNA → seguridad específica + venues adecuados para ir solo
       if ((formData.tipoViaje || '').toLowerCase() === 'solo' && interesesArray[0] === 'nocturna') {
-        reglas.push(`- VIAJERO SOLO + VIDA NOCTURNA: Prioriza venues donde sea natural ir solo: bares con barra larga donde se genera conversación espontánea, eventos de música en vivo con asientos individuales, tours nocturnos grupales donde conocer gente es parte del plan. NUNCA recomiendes discotecas o clubs donde ir sin grupo resulta incómodo. OBLIGATORIO en tips_culturales: zonas específicas seguras para salir solo de noche, apps de seguridad locales (botón de pánico, compartir ubicación en tiempo real), cómo volver al alojamiento seguro después de la medianoche.`);
+        reglas.push(`- SOLO+NOCTURNA: Venues donde ir solo es natural (barra larga, musica en vivo, tours nocturnos grupales). NUNCA discotecas. En tips: zonas seguras para salir solo de noche.`);
       }
-
-      // AVENTURA + MOVILIDAD REDUCIDA → aventura accesible específica
       if (interesesArray.includes('aventura') && formData.movilidadReducida) {
-        reglas.push(`- AVENTURA ACCESIBLE: El viajero quiere aventura pero tiene movilidad reducida. OBLIGATORIO adaptar cada actividad de aventura: tirolina con silla adaptada, kayak de mar en agua tranquila (sin senderismo de acceso), observación de fauna en vehículo o embarcación motorizada, e-bike en terreno llano, escalada en pared indoor con equipo adaptado, paseos a caballo en llano. NUNCA propongas trekking con desnivel, senderismo que requiera escalar rocas, actividades que exijan correr, saltar o equilibrio prolongado. Menciona explícitamente la accesibilidad en CADA actividad outdoor.`);
+        reglas.push(`- AVENTURA ACCESIBLE: Adapta outdoor (tirolina adaptada, kayak tranquilo, e-bike en llano, fauna en vehiculo). NUNCA trekking con desnivel. Menciona accesibilidad en cada actividad.`);
       }
-
-      // RESTRICCIÓN DIETARIA + PRIORIDAD GASTRONOMÍA → gastronomía de nicho dentro de la restricción
       if (formData.restriccionDietaria && formData.restriccionDietaria !== 'sin-restriccion' && formData.prioridadGasto === 'gastronomia') {
         const r = formData.restriccionDietaria;
-        reglas.push(`- GASTRONOMÍA PREMIUM CON RESTRICCIÓN (${r.toUpperCase()}): Este viajero invierte en comida Y tiene restricción ${r}. No basta "tiene opciones ${r}" — OBLIGATORIO buscar restaurantes donde la restricción es el ADN del chef: cocina plant-based de autor, mariscos sostenibles de pesca directa, menú degustación sin gluten certificado. Al menos 1 experiencia gastronómica de alto nivel con la restricción como eje central: clase de cocina ${r} con chef local, tour de mercado de productores seleccionando ingredientes dentro de la restricción, cena degustación de 5+ pasos. El presupuesto extra en gastronomía se invierte en calidad DENTRO de la restricción, nunca en saltársela.`);
+        reglas.push(`- GASTRONOMIA PREMIUM+RESTRICCION (\): Restaurantes donde la restriccion es el ADN del chef. Al menos 1 experiencia gastronomica premium dentro de la restriccion.`);
       }
-
-      // LUNA DE MIEL / ANIVERSARIO + PRIORIDAD GASTRONOMÍA → cenas como eventos románticos
       if (((formData.ocasionEspecial || '').toLowerCase() === 'luna-de-miel' || (formData.ocasionEspecial || '').toLowerCase() === 'aniversario') && formData.prioridadGasto === 'gastronomia') {
-        reglas.push(`- ROMANCE + GASTRONOMÍA PREMIUM: Combina romanticismo y excelencia gastronómica. Cada cena es un evento: restaurante con vista excepcional y ambiente íntimo, menú degustación para dos con maridaje. Al menos 1 experiencia gastronómica romántica única por viaje: cena privada en bodega con sommelier, picnic de autor con vista panorámica preparado por el hotel, clase de cocina privada para la pareja con el chef. Los almuerzos también deben tener ambiente romántico — no solo ser buenos gastronómicamente. El presupuesto en comida se redistribuye hacia 2-3 experiencias excepcionales en lugar de muchas mediocres.`);
+        reglas.push(`- ROMANCE+GASTRONOMIA: Cada cena es un evento romantico (vista, menu degustacion para dos). Al menos 1 experiencia gastronomica unica por viaje.`);
       }
-
-      // VIAJERO FRECUENTE + NATURALEZA/DEPORTE/AVENTURA → actividades que usan los locales
       if (esViajeroPro && (interesesArray.includes('naturaleza') || interesesArray.includes('aventura') || interesesArray.includes('deporte'))) {
-        reglas.push(`- NATURALEZA/DEPORTE LOCAL PARA VIAJERO EXPERTO: Las actividades outdoor DEBEN ser las que practican los locales, no los circuitos turísticos. Ejemplos: ruta de trail que recorren los ultramaratonistas del lugar los fines de semana (con nombre real de la ruta), lago o río donde los kayakistas locales entrenan, mercado de productores donde compran los chefs y los deportistas del barrio, grupo local de escalada que organiza salidas abiertas. Al menos 1 actividad que no aparezca en TripAdvisor ni en Civitatis. En experiencias: prioriza operadores locales pequeños sobre plataformas turísticas masivas.`);
+        reglas.push(`- NATURALEZA/DEPORTE LOCAL EXPERTO: Actividades que usan los locales, no circuitos turisticos. Al menos 1 actividad sin presencia en TripAdvisor ni Civitatis.`);
       }
-
-      // RESTRICCIÓN DIETARIA + NATURALEZA/AVENTURA → logística de comida en ruta
       if (formData.restriccionDietaria && formData.restriccionDietaria !== 'sin-restriccion' && (interesesArray.includes('naturaleza') || interesesArray.includes('aventura'))) {
-        reglas.push(`- ALIMENTACIÓN EN RUTA CON RESTRICCIÓN (${formData.restriccionDietaria.toUpperCase()}): Para días con actividades de naturaleza o aventura de jornada completa, OBLIGATORIO incluir en tips_culturales o en el tip del día: dónde conseguir provisiones que respeten la restricción (tiendas naturistas específicas, mercados, supermercados recomendados con sección adecuada). Para actividades de día completo en ruta, indicar si hay opciones de comida en el camino o si es necesario llevar todo preparado.`);
+        reglas.push(`- ALIMENTACION EN RUTA+RESTRICCION (\): Para dias de naturaleza/aventura completos, indicar donde conseguir provisiones dentro de la restriccion.`);
       }
-
-      // FAMILIA + 3+ NIÑOS → simplificar logística, espaciar actividades
       if ((formData.tipoViaje || '').toLowerCase() === 'familia' && (formData.numNinos || 0) >= 3) {
-        reglas.push(`- FAMILIA NUMEROSA (${formData.numNinos} niños): Con 3 o más niños la logística es el mayor desafío. OBLIGATORIO: (1) Máximo 2 destinos distintos en el día — desplazamientos largos con muchos niños agotan. (2) Siempre incluye tiempo de descanso/piscina/parque entre actividades. (3) Restaurantes con espacio amplio, menú infantil visible y sin espera larga (evita restaurantes de moda sin reserva). (4) Alojamiento: apartamento o villa con cocina preferible sobre habitaciones de hotel separadas. (5) Al menos 1 actividad por día diseñada específicamente para niños (zoo, acuario, parque temático, taller de manualidades).`);
+        reglas.push(`- FAMILIA NUMEROSA (\ ninos): Max 2 destinos/dia. Descanso entre actividades. Restaurantes amplios con menu infantil. Alojamiento con cocina preferible.`);
       }
-
       return reglas.join('\n');
     })();
 
@@ -1706,12 +1664,12 @@ Para origen_iata y destino_iata: c�digo IATA de 3 letras del aeropuerto princi
 
     // -- Regla ALOJAMIENTO seg�n preferencia ---------------------------------
     const alojRule = alojPref === 'hostal'
-      ? `- ALOJAMIENTO: El cliente eligi\u00f3 HOSTALES. Para cada opci\u00f3n usa el campo "zona" con el barrio espec\u00edfico (ej: "El Raval", "Mitte") y el campo "nombre" con un descriptor \u00fatil (ej: "Hostal social con bar en El Raval, rating 8.5+", "Albergue boutique con cocina compartida en Mitte, rating 9.0+"). La disponibilidad var\u00eda por fechas: zona+tipo garantiza que el viajero siempre encuentre opciones equivalentes. PROHIBIDO recomendar hoteles de cadena ni Airbnb. Las 3 plataformas son TODAS "Hostelworld". SIEMPRE 3 opciones por ciudad: Econ\u00f3mico, Confort y Premium.`
+      ? `- ALOJAMIENTO: Hostales. Usa 'zona' (barrio, ej: 'El Raval') y 'nombre' (descriptor, ej: 'Hostal social 8.5+ en El Raval'). PROHIBIDO hoteles de cadena. Plataforma: Hostelworld. 3 opciones: Economico, Confort, Premium.`
       : alojPref === 'airbnb'
-        ? `- ALOJAMIENTO: El cliente eligi\u00f3 AIRBNB. Para cada opci\u00f3n usa el campo "zona" con el barrio/\u00e1rea (ej: "Palermo Soho", "Gracia") y el campo "nombre" con un descriptor de tipo+zona (ej: "Apartamento entero 1 dormitorio en Palermo Soho", "Loft con terraza para 2 en Gracia", "Casa completa con jard\u00edn en San Telmo"). Econ\u00f3mico = habitaci\u00f3n privada; Confort y Premium = apartamento o casa entera. La disponibilidad var\u00eda: zona+tipo garantiza opciones equivalentes siempre. SIEMPRE 3 opciones por ciudad.`
+        ? `- ALOJAMIENTO: Airbnb. Usa 'zona' (barrio) y 'nombre' (descriptor tipo+zona, ej: 'Apartamento entero en Palermo Soho'). Economico=habitacion privada; Confort/Premium=apartamento/casa entera. 3 opciones.`
         : alojPref === 'bnb'
-          ? `- ALOJAMIENTO: El cliente eligi\u00f3 BED & BREAKFAST. Para cada opci\u00f3n usa el campo "zona" con el barrio espec\u00edfico y el campo "nombre" con un descriptor (ej: "B&B familiar con desayuno incluido en el casco hist\u00f3rico", "Casa de hu\u00e9spedes boutique cerca del mercado central"). B\u00fascarlos en Booking.com con filtro "Bed and breakfast". SIEMPRE 3 opciones por ciudad. La plataforma de las 3 es "Booking.com".`
-          : `- ALOJAMIENTO: Para cada opci\u00f3n usa el campo "zona" con el barrio/\u00e1rea espec\u00edfica y el campo "nombre" con un descriptor de categor\u00eda+tipo (ej: "Hotel boutique 4\u2605 en el Eixample", "Hotel de cadena 3\u2605 cerca del centro hist\u00f3rico", "Hotel 2\u2605 bien ubicado en el barrio del puerto"). Si conoces un hotel real verificable (Hilton, Marriott, NH, Ibis, Radisson, Hyatt, etc.) puedes mencionarlo en "nombre", antecedido del barrio (ej: "NH Collection 4\u2605 en el Eixample"). La disponibilidad var\u00eda: zona+tipo garantiza que el viajero encuentre opciones equivalentes. SIEMPRE 3 opciones por ciudad: Econ\u00f3mico, Confort y Premium.`;
+          ? `- ALOJAMIENTO: Bed & Breakfast. Usa 'zona' (barrio) y 'nombre' (descriptor, ej: 'B&B con desayuno en casco historico'). Booking filtro: Bed and breakfast. 3 opciones. Plataforma: Booking.com.`
+          : `- ALOJAMIENTO: Usa 'zona' (barrio/area) y 'nombre' (descriptor categoria+tipo, ej: 'Hotel boutique 4 estrellas en el Eixample'). 3 opciones: Economico, Confort, Premium.`;
     const platEco  = alojPref === 'hostal'  ? 'Hostelworld'
                    : alojPref === 'airbnb'  ? 'Airbnb'
                    : alojPref === 'bnb'     ? 'Booking.com'
