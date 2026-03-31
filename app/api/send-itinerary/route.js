@@ -1504,7 +1504,7 @@ DEBES:
       const reglas = [];
 
       // SOLO + VIDA NOCTURNA → seguridad específica + venues adecuados para ir solo
-      if (tipoViaje === 'solo' && interesesArray[0] === 'nocturna') {
+      if ((formData.tipoViaje || '').toLowerCase() === 'solo' && interesesArray[0] === 'nocturna') {
         reglas.push(`- VIAJERO SOLO + VIDA NOCTURNA: Prioriza venues donde sea natural ir solo: bares con barra larga donde se genera conversación espontánea, eventos de música en vivo con asientos individuales, tours nocturnos grupales donde conocer gente es parte del plan. NUNCA recomiendes discotecas o clubs donde ir sin grupo resulta incómodo. OBLIGATORIO en tips_culturales: zonas específicas seguras para salir solo de noche, apps de seguridad locales (botón de pánico, compartir ubicación en tiempo real), cómo volver al alojamiento seguro después de la medianoche.`);
       }
 
@@ -1520,7 +1520,7 @@ DEBES:
       }
 
       // LUNA DE MIEL / ANIVERSARIO + PRIORIDAD GASTRONOMÍA → cenas como eventos románticos
-      if ((ocasion === 'luna-de-miel' || ocasion === 'aniversario') && formData.prioridadGasto === 'gastronomia') {
+      if (((formData.ocasionEspecial || '').toLowerCase() === 'luna-de-miel' || (formData.ocasionEspecial || '').toLowerCase() === 'aniversario') && formData.prioridadGasto === 'gastronomia') {
         reglas.push(`- ROMANCE + GASTRONOMÍA PREMIUM: Combina romanticismo y excelencia gastronómica. Cada cena es un evento: restaurante con vista excepcional y ambiente íntimo, menú degustación para dos con maridaje. Al menos 1 experiencia gastronómica romántica única por viaje: cena privada en bodega con sommelier, picnic de autor con vista panorámica preparado por el hotel, clase de cocina privada para la pareja con el chef. Los almuerzos también deben tener ambiente romántico — no solo ser buenos gastronómicamente. El presupuesto en comida se redistribuye hacia 2-3 experiencias excepcionales en lugar de muchas mediocres.`);
       }
 
@@ -1535,7 +1535,7 @@ DEBES:
       }
 
       // FAMILIA + 3+ NIÑOS → simplificar logística, espaciar actividades
-      if (tipoViaje === 'familia' && (formData.numNinos || 0) >= 3) {
+      if ((formData.tipoViaje || '').toLowerCase() === 'familia' && (formData.numNinos || 0) >= 3) {
         reglas.push(`- FAMILIA NUMEROSA (${formData.numNinos} niños): Con 3 o más niños la logística es el mayor desafío. OBLIGATORIO: (1) Máximo 2 destinos distintos en el día — desplazamientos largos con muchos niños agotan. (2) Siempre incluye tiempo de descanso/piscina/parque entre actividades. (3) Restaurantes con espacio amplio, menú infantil visible y sin espera larga (evita restaurantes de moda sin reserva). (4) Alojamiento: apartamento o villa con cocina preferible sobre habitaciones de hotel separadas. (5) Al menos 1 actividad por día diseñada específicamente para niños (zoo, acuario, parque temático, taller de manualidades).`);
       }
 
