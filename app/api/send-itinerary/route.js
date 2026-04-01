@@ -1,4 +1,4 @@
-﻿﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -2192,7 +2192,7 @@ IMPORTANTE sobre dias_pro: para CADA d�a del viaje (${formData.dias} d�as), 
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: promptProSolo }],
           temperature: 0.7,
-          max_tokens: 6000,
+          max_tokens: 2500,
         }),
       });
 
@@ -2272,111 +2272,238 @@ IMPORTANTE sobre dias_pro: para CADA d�a del viaje (${formData.dias} d�as), 
       console.log('Basic?Pro merge fall�, generando Pro completo...');
     }
 
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // ── SPLIT EN 2 LLAMADAS GROQ ──────────────────────────────────────────────
+    // Call 1 (llama-3.1-8b-instant, 20k TPM): secciones de contenido (días + metadata)
+    // Call 2 (llama-3.3-70b-versatile, 6k TPM): secciones de logística (vuelos + alojamiento)
+
+    const proSectionsCall1 = isPro ? `,
+  "bares_vida_nocturna": {
+    "NOMBRE_REAL_CIUDAD": [
+      { "nombre": "string", "tipo_ambiente": "string", "precio_trago": "string", "mejor_dia": "string", "tip": "string" },
+      { "nombre": "string 2", "tipo_ambiente": "string", "precio_trago": "string", "mejor_dia": "string", "tip": "string" }
+    ]
+  },
+  "idioma_cultura": {
+    "idioma": "string",
+    "frases_utiles": [{ "frase_local": "string", "pronunciacion": "string", "significado": "string" }],
+    "costumbres": "string", "vestimenta": "string", "mala_educacion": "string"
+  },
+  "que_empacar": {
+    "clima_esperado": "string", "ropa": ["string"],
+    "adaptador_enchufe": "string", "botiquin": ["string"], "power_bank": "string"
+  },
+  "extras": [
+    { "categoria": "string basado en intereses", "actividades": ["string", "string", "string"] },
+    { "categoria": "Para dias de lluvia o descanso", "actividades": ["string", "string", "string"] }
+  ],
+  "dias_pro": [
+    { "numero": 1, "plan_b": "string si llueve o cierra", "ruta_optimizada": "string" }
+  ]` : '';
+
+    const proSectionsCall2 = isPro ? `,
+  "transporte_local": {
+    "como_moverse": "string", "apps_recomendadas": ["string"],
+    "tarjeta_transporte": "string",
+    "opciones_aeropuerto_centro": [{ "medio": "string", "costo": "string", "duracion": "string", "tip": "string o null" }],
+    "conviene_auto": "string"
+  },
+  "conectividad": {
+    "roaming": "string", "esim_recomendada": "string",
+    "sim_local": "string", "wifi_destino": "string", "apps_descargar": ["string"]
+  },
+  "festivos_horarios": {
+    "feriados_en_fechas": "string", "horario_comercial": "string",
+    "horarios_comida": "string", "museos": "string"
+  },
+  "salud_seguridad": {
+    "vacunas": "string", "agua_potable": "string", "nivel_seguridad": "string",
+    "zonas_evitar": "string", "estafas_comunes": "string"
+  }` : '';
+
+    const promptCall1 = `Eres el planificador de VIVANTE. Genera el itinerario diario con tono cercano, directo, como un amigo experto. Precios realistas para ${currentYear}.
+${clienteCtx}
+
+REGLAS:
+${diasRule}
+- PRECIOS "por persona": en TODOS los campos de precio agrega "/ persona". Aplica sin excepcion.
+- RITMO: Ritmo efectivo ${ritmoEfectivo}/5. RESPETA: ritmo 1-2 = max 2 actividades/dia; ritmo 3 = 2-3 actividades; ritmo 4-5 = 3-4 actividades.
+${reglasPersonalizacion}
+${tipoViajeRule}${geoRule}${domesticRule ? '\n' + domesticRule : ''}${checklistRule ? '\n' + checklistRule : ''}
+
+GENERA JSON puro (sin markdown, sin \`\`\`) con EXACTAMENTE estas secciones:
+{
+  "titulo": "string creativo",
+  "subtitulo": "string tagline motivador",
+  "resumen": {
+    "destino": "string",
+    "origen": "string",
+    "dias": numero,
+    "viajeros": numero,
+    "tipo": "string",
+    "presupuesto_total": "string USD / persona",
+    "ritmo": "string",
+    "fecha_salida": "YYYY-MM-DD",
+    "fecha_regreso": "YYYY-MM-DD",
+    "origen_iata": "string (3 letras)",
+    "destino_iata": "string (3 letras)",
+    "fecha_optima_texto": "string (ej: Salida 15 de mayo, regreso 25 de mayo 2026)",
+    "distribucion": "string con distribucion de dias por zona"
+  },
+  "dias": [
+    {
+      "numero": numero,
+      "titulo": "string creativo",
+      "manana": { "horario": "string", "actividad": "string detallado", "costo": "string / persona", "tip": "string insider" },
+      "tarde": { "horario": "string", "almuerzo": "string (restaurante + precio / persona)", "actividad": "string", "costo": "string / persona" },
+      "noche": { "cena": "string (restaurante + precio / persona)", "actividad": "string" },
+      "ruta_optimizada": "string con orden logico de zonas",
+      "gasto_dia": "string USD / persona"
+    }
+  ],
+  "tips_culturales": ["string tip cultural", "string tip conectividad", "string tip dinero", "string tip transporte", "string tip costumbres"],
+  "dinero": {
+    "moneda_local": "string", "tipo_cambio": "string",
+    "tarjeta_o_efectivo": "string", "donde_cambiar": "string",
+    "propinas": "string", "tip_extra": "string"
+  },
+  "checklist": ["string", "string", "string", "string", "string", "string", "string", "string"],
+  "emergencias": {
+    "embajada": "string (direccion y telefono)",
+    "emergencias_local": "string (numero local)",
+    "policia_turistica": "string o null"
+  },
+  "lo_imperdible": [
+    { "nombre": "string", "descripcion": "string inspirador en voz VIVANTE" }
+  ]${proSectionsCall1}
+}`;
+
+    const groqRes1 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${groqApiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
-        messages: [{ role: 'user', content: isPro ? promptPro : promptBasico }],
+        messages: [{ role: 'user', content: promptCall1 }],
         temperature: 0.7,
-        max_tokens: isPro ? 9000 : 8000,
+        max_tokens: 6000,
       }),
     });
 
-    if (!groqRes.ok) {
-      const groqErrText = await groqRes.text();
-      console.error('Groq error status:', groqRes.status, 'body:', groqErrText.substring(0, 300));
-      // Si falla: intentar con modelo alternativo
-      if (groqRes.status === 429 || groqRes.status === 413 || groqRes.status === 503) {
-        console.log('Error ' + groqRes.status + ' en modelo principal, intentando fallback con llama-3.3-70b-versatile...');
-        const groqFallback = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${groqApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            messages: [{ role: 'user', content: isPro ? promptPro : promptBasico }],
-            temperature: 0.7,
-            max_tokens: isPro ? 8000 : 6000,
-          }),
-        });
-        if (groqFallback.ok) {
-          const groqData2 = await groqFallback.json();
-          const rawContent2 = groqData2.choices[0]?.message?.content || '';
-          if (rawContent2) {
-            // usar rawContent2 como rawContent para el parseado
-            try {
-              const cleaned2 = rawContent2.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-              const start2 = cleaned2.indexOf('{');
-              const str2 = start2 >= 0 ? cleaned2.substring(start2) : cleaned2;
-              let parsed2 = null;
-              try { parsed2 = JSON.parse(str2); } catch {}
-              if (!parsed2) {
-                let pos2 = str2.lastIndexOf('}');
-                while (pos2 > 0 && !parsed2) {
-                  try { parsed2 = JSON.parse(str2.substring(0, pos2 + 1)); }
-                  catch { pos2 = str2.lastIndexOf('}', pos2 - 1); }
-                }
-              }
-              if (parsed2) {
-                console.log('Fallback OK. Secciones:', Object.keys(parsed2).join(', '));
-                return NextResponse.json({ itinerario: parsed2, planId, _model: 'fallback' });
-              }
-            } catch (fe) { console.error('Fallback parse error:', fe.message); }
-          }
-        } else {
-          const fallbackErr = await groqFallback.text();
-          console.error('Fallback tambi�n fall�:', groqFallback.status, fallbackErr);
-        }
-      }
+    if (!groqRes1.ok) {
+      const err1 = await groqRes1.text();
+      console.error('Groq Call1 error:', groqRes1.status, err1.substring(0, 200));
       return NextResponse.json({ error: 'Error generando itinerario' }, { status: 500 });
     }
 
-    const groqData = await groqRes.json();
-    const rawContent = groqData.choices[0]?.message?.content || '';
+    const groqData1 = await groqRes1.json();
+    const raw1 = groqData1.choices[0]?.message?.content || '';
+    const finish1 = groqData1.choices[0]?.finish_reason;
+    console.log('Call1 finish_reason:', finish1, '| length:', raw1.length);
 
-    let itinerario;
+    let part1 = null;
     try {
-      // Limpiar markdown si el modelo los incluy�
-      const cleaned = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-      const start = cleaned.indexOf('{');
-      const str = start >= 0 ? cleaned.substring(start) : cleaned;
-
-      // 1. Intento directo
-      let parsed = null;
-      try { parsed = JSON.parse(str); } catch {}
-
-      // 2. Si el JSON fue truncado, buscar desde el �ltimo '}' v�lido hacia atr�s
-      if (!parsed) {
-        let pos = str.lastIndexOf('}');
-        while (pos > 0 && !parsed) {
-          try { parsed = JSON.parse(str.substring(0, pos + 1)); }
-          catch { pos = str.lastIndexOf('}', pos - 1); }
+      const cl1 = raw1.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const s1 = cl1.indexOf('{');
+      const str1 = s1 >= 0 ? cl1.substring(s1) : cl1;
+      try { part1 = JSON.parse(str1); } catch {}
+      if (!part1) {
+        let pos1 = str1.lastIndexOf('}');
+        while (pos1 > 0 && !part1) {
+          try { part1 = JSON.parse(str1.substring(0, pos1 + 1)); }
+          catch { pos1 = str1.lastIndexOf('}', pos1 - 1); }
         }
       }
+    } catch (e) { console.error('Call1 parse error:', e.message); }
 
-      if (!parsed) throw new Error('No valid JSON found');
-      itinerario = parsed;
-
-      // Post-procesado: corregir separador de ruta "?" -> "→" (bug de encoding en el prompt)
-      if (itinerario.vuelos?.length) {
-        itinerario.vuelos = itinerario.vuelos.map(v => ({
-          ...v,
-          ruta: (v.ruta || '').replace(/ \? /g, ' \u2192 '),
-        }));
-      }
-
-      console.log('Itinerario parseado OK. Secciones:', Object.keys(itinerario).join(', '));
-    } catch (e) {
-      console.error('JSON parse error:', e.message);
-      console.error('Raw content preview:', rawContent.substring(0, 600));
-      return NextResponse.json({ error: 'Error procesando itinerario' }, { status: 500 });
+    if (!part1) {
+      console.error('Call1 parse failed. Preview:', raw1.substring(0, 300));
+      return NextResponse.json({ error: 'Error generando itinerario' }, { status: 500 });
     }
+    console.log('Call1 OK. Dias:', (part1.dias || []).length, '| Secciones:', Object.keys(part1).join(', '));
+
+    // ── Call 2: llama-3.3-70b-versatile → vuelos + alojamiento + calidad ──────
+    const _fechaSalida2  = part1.resumen?.fecha_salida  || '';
+    const _fechaRegreso2 = part1.resumen?.fecha_regreso || '';
+    const _destino2      = part1.resumen?.destino       || formData.destino;
+
+    const promptCall2 = `Eres el experto en logistica de viajes de VIVANTE. Genera vuelos, alojamiento, restaurantes, experiencias y presupuesto. Precios realistas para ${currentYear}.
+${clienteCtx}
+FECHAS CONFIRMADAS: Salida ${_fechaSalida2} — Regreso ${_fechaRegreso2}
+DESTINO CONFIRMADO: ${_destino2}
+
+REGLAS:
+- VUELOS: Usa conocimiento real de rutas aereas. Minimo 3 aerolineas distintas. SOLO escala="Directo" si existe vuelo directo REAL. En "ruta" especifica ciudades reales (ej: "SCL -> BOG -> NRT").${isDomestic ? ' VIAJE DOMESTICO: vuelos dentro del mismo pais.' : ''}
+${alojRule}
+- RESTAURANTES: UNA SOLA ciudad y viaje >7 dias = 5 restaurantes. Multi-ciudad o <=7 dias = 3 restaurantes por ciudad.
+- PRESUPUESTO: presupuesto_desglose.total NO debe superar $${presupuesto} USD por persona.
+- PRECIOS "por persona": agrega "/ persona" en todos los campos de precio.
+- AEROLINEAS PERMITIDAS: LATAM, JetSmart, Sky Airline, Avianca, Copa Airlines, Aerolineas Argentinas, Aeromexico, GOL, Azul, American Airlines, United Airlines, Delta, Iberia, Iberia Express, Air Europa, Turkish Airlines, Air France, KLM, Lufthansa, British Airways, TAP Portugal, Norwegian, EasyJet, Ryanair, Qatar Airways, Emirates, Singapore Airlines, Japan Airlines, ANA.
+
+GENERA JSON puro (sin markdown, sin \`\`\`) con EXACTAMENTE estas secciones:
+{
+  "presupuesto_desglose": {
+    "vuelos": "string / persona", "alojamiento": "string / persona",
+    "comidas": "string / persona", "actividades": "string / persona",
+    "transporte_local": "string / persona", "extras": "string / persona",
+    "total": "string / persona"
+  },
+  "vuelos": [
+    { "aerolinea": "string", "ruta": "string", "precio_estimado": "string / persona", "duracion": "string", "escala": "string", "tip": "string" }
+  ],
+  ${alojamientoSchema},
+  ${restaurantesSchema},
+  ${experienciasSchema}${proSectionsCall2}
+}`;
+
+    const groqRes2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${groqApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: promptCall2 }],
+        temperature: 0.7,
+        max_tokens: 3000,
+      }),
+    });
+
+    let part2 = null;
+    if (groqRes2.ok) {
+      const groqData2 = await groqRes2.json();
+      const raw2 = groqData2.choices[0]?.message?.content || '';
+      const finish2 = groqData2.choices[0]?.finish_reason;
+      console.log('Call2 finish_reason:', finish2, '| length:', raw2.length);
+      try {
+        const cl2 = raw2.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        const s2 = cl2.indexOf('{');
+        const str2 = s2 >= 0 ? cl2.substring(s2) : cl2;
+        try { part2 = JSON.parse(str2); } catch {}
+        if (!part2) {
+          let pos2 = str2.lastIndexOf('}');
+          while (pos2 > 0 && !part2) {
+            try { part2 = JSON.parse(str2.substring(0, pos2 + 1)); }
+            catch { pos2 = str2.lastIndexOf('}', pos2 - 1); }
+          }
+        }
+        if (part2) console.log('Call2 OK. Secciones:', Object.keys(part2).join(', '));
+        else console.error('Call2 parse failed. Preview:', raw2.substring(0, 200));
+      } catch (e) { console.error('Call2 parse error:', e.message); }
+    } else {
+      const err2 = await groqRes2.text();
+      console.error('Groq Call2 error:', groqRes2.status, err2.substring(0, 200));
+    }
+
+    // Fusionar part1 + part2
+    let itinerario = part2 ? { ...part1, ...part2 } : part1;
+
+    // Post-procesado: corregir separador de ruta "?" -> "→"
+    if (itinerario.vuelos?.length) {
+      itinerario.vuelos = itinerario.vuelos.map(v => ({
+        ...v,
+        ruta: (v.ruta || '').replace(/ \? /g, ' \u2192 '),
+      }));
+    }
+
+    console.log('Itinerario merge OK. Secciones finales:', Object.keys(itinerario).join(', '));
+
 
     // --- EMAIL HTML (resumen simplificado para el correo) ----------------------
     const planLabel = isPro ? 'Vivante Pro \u2728' : 'Vivante B\u00e1sico';
