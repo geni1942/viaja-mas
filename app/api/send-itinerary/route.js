@@ -1991,7 +1991,7 @@ GENERA JSON puro (sin markdown, sin \`\`\`) con EXACTAMENTE estas secciones:
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: promptCall1 }],
         temperature: 0.7,
-        max_tokens: 2500,
+        max_tokens: 4500,
       }),
     });
 
