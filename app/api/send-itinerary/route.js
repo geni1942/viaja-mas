@@ -1338,7 +1338,6 @@ export async function POST(request) {
       return 1500; // internacional gen�rico
     })();
 
-    const budgetWarning = presupuesto < umbralMin ? `
     const budgetWarning = presupuesto < umbralMin
       ? `ALERTA: Presupuesto $${presupuesto} USD es bajo para ${formData.destino || 'este destino'} (mín estimado $${umbralMin}). Adáptalo con hostels/Airbnb económico, comida callejera, actividades gratuitas. presupuesto_desglose.total no puede superar $${Math.round(presupuesto * 1.1)} USD.`
       : '';
