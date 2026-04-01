@@ -2279,19 +2279,19 @@ IMPORTANTE sobre dias_pro: para CADA d�a del viaje (${formData.dias} d�as), 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: isPro ? promptPro : promptBasico }],
         temperature: 0.7,
-        max_tokens: isPro ? 8000 : 6000,
+        max_tokens: isPro ? 9000 : 8000,
       }),
     });
 
     if (!groqRes.ok) {
       const groqErrText = await groqRes.text();
-      console.error('Groq error status:', groqRes.status, 'body:', groqErrText);
-      // Si es rate limit (429) o request demasiado grande (413), intentar con modelo con mayor limite de TPM
-      if (groqRes.status === 429 || groqRes.status === 413) {
-        console.log(`Error ${groqRes.status} en modelo principal, intentando fallback con llama-3.1-8b-instant...`);
+      console.error('Groq error status:', groqRes.status, 'body:', groqErrText.substring(0, 300));
+      // Si falla: intentar con modelo alternativo
+      if (groqRes.status === 429 || groqRes.status === 413 || groqRes.status === 503) {
+        console.log('Error ' + groqRes.status + ' en modelo principal, intentando fallback con llama-3.3-70b-versatile...');
         const groqFallback = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -2299,7 +2299,7 @@ IMPORTANTE sobre dias_pro: para CADA d�a del viaje (${formData.dias} d�as), 
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'llama-3.1-8b-instant',
+            model: 'llama-3.3-70b-versatile',
             messages: [{ role: 'user', content: isPro ? promptPro : promptBasico }],
             temperature: 0.7,
             max_tokens: isPro ? 8000 : 6000,
