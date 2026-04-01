@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
+import { getPlan } from '@/lib/plans';
 
 export async function POST(req) {
   try {
-    const { planId, planNombre, precio, email, nombre, destino, formData } = await req.json();
+    const { planId, email, nombre, destino, formData } = await req.json();
 
-    if (!planId || !precio || !email) {
+    if (!planId || !email) {
       return NextResponse.json({ error: 'Faltan datos del plan' }, { status: 400 });
     }
+
+    const plan = getPlan(planId);
+    if (!plan) {
+      return NextResponse.json({ error: 'Plan no válido' }, { status: 400 });
+    }
+    const precio = plan.precioClp;
+    const planNombre = plan.nombre;
 
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { UPGRADE_PRICE_CLP } from '@/lib/plans';
 
 export async function POST(req) {
   try {
@@ -22,7 +23,7 @@ export async function POST(req) {
           title: 'VIVANTE Pro — Upgrade desde Básico',
           description: 'Acceso completo al itinerario Pro: bares, transporte, conectividad, qué empacar y más.',
           quantity: 1,
-          unit_price: 6790,   // $7 USD ≈ 6.790 CLP (ajustar según tasa)
+          unit_price: UPGRADE_PRICE_CLP,
           currency_id: 'CLP',
         },
       ],

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, Plane, MapPin, Users, Sparkles, Loader2, RefreshCw, Check, CreditCard } from 'lucide-react';
+import { PLANS } from '@/lib/plans';
 
 export default function TravelForm({ onClose, initialDestino = '' }) {
   const [step, setStep] = useState(1);
@@ -42,38 +43,7 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
     email: '',
   });
 
-  const planes = [
-    {
-      id: 'basico',
-      nombre: 'Vivante Básico',
-      precio: 10,
-      precioClp: 9990,
-      descripcion: 'Itinerario personalizado día a día',
-      incluye: [
-        'Itinerario completo en PDF',
-        'Links de vuelos y alojamientos',
-        'Puntos de interés',
-        'Tips culturales, de conectividad y dinero',
-        'Tips locales básicos para viajeros',
-      ],
-    },
-    {
-      id: 'pro',
-      nombre: 'Vivante Pro',
-      precio: 17,
-      precioClp: 16990,
-      descripcion: 'Experiencia premium con todos los detalles',
-      incluye: [
-        'Todo lo del Vivante Básico',
-        'Restaurantes recomendados por zona y RRSS',
-        'Opciones de tours y actividades',
-        'Tips de seguridad y transporte',
-        'Tips culturales, de conectividad y dinero',
-        'Presupuesto detallado por día',
-      ],
-      popular: true,
-    },
-  ];
+  const planes = PLANS;
 
   const interesesOptions = [
     { id: 'playa', label: 'Playa', emoji: '🏖️' },
@@ -271,6 +241,11 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                   } catch {}
                   setIsSubmitting(true);
                   setError(null);
+                  // ── DEV BYPASS: saltar MercadoPago en localhost ──
+                  if (window.location.hostname === 'localhost') {
+                    window.location.href = `/pago-exitoso?plan=${selectedPlan}&d=${encodeURIComponent(snapFormData.destino || '')}`;
+                    return;
+                  }
                   try {
                     const res = await fetch('/api/payment/create-preference', {
                       method: 'POST',
@@ -278,8 +253,6 @@ export default function TravelForm({ onClose, initialDestino = '' }) {
                       body: JSON.stringify({
                         planId: selectedPlan,
                         planNombre: planSeleccionado?.nombre,
-                        precio: planSeleccionado?.precioClp,
-                        precioUsd: planSeleccionado?.precio,
                         email: snapFormData.email,
                         nombre: snapFormData.nombre,
                         destino: snapFormData.destino,

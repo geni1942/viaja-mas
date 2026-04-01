@@ -1,122 +1,59 @@
-﻿﻿import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
+
+import { buildConfirmationEmail } from '@/lib/email-templates';
+import { buildAirlineUrl, buildAlojamientoUrl } from '@/lib/url-builders';
+import { ce } from '@/lib/text-utils';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
-// --- Helper: HTML del email de confirmaci\u00f3n -----------------------------------
-function buildConfirmationEmail(formData, itinerario, planLabel, fechaTexto) {
-  const coral = '#FF6332';
-  const violeta = '#6F42C1';
-  const crema = '#FCF8F4';
-  const bg1 = '#FFF0EB';
-  const bg0 = '#FFF8F5';
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tu itinerario VIVANTE</title></head>
-<body style="margin:0;padding:0;background:${crema};font-family:Arial,sans-serif;color:#212529;">
-<div style="max-width:640px;margin:0 auto;background:${crema};">
-  <div style="background:${coral};padding:28px;text-align:center;">
-    <p style="color:#fff;font-size:28px;font-weight:800;margin:0 0 4px;letter-spacing:-1px;">VIVANTE</p>
-    <p style="color:rgba(255,255,255,0.85);font-size:12px;margin:0;letter-spacing:2px;">VIAJA M\u00c1S. PLANIFICA MENOS.</p>
-  </div>
-  <div style="padding:32px;">
-    <h1 style="font-size:22px;color:#212529;margin:0 0 8px;">\u00a1Hola, ${formData.nombre}! \u2708\ufe0f</h1>
-    <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 6px;">Tu plan <strong style="color:${coral};">${planLabel}</strong> est\u00e1 listo.</p>
-    ${fechaTexto ? `<p style="color:${violeta};font-style:italic;font-size:14px;margin:0 0 20px;">\ud83d\udcc5 ${fechaTexto}</p>` : ''}
-    <div style="background:${bg1};border-radius:12px;padding:20px;margin-bottom:24px;">
-      <h2 style="color:${coral};font-size:17px;margin:0 0 12px;">\ud83d\udcca Resumen</h2>
-      <p style="margin:4px 0;"><strong>Destino:</strong> ${itinerario.resumen?.destino || formData.destino}</p>
-      <p style="margin:4px 0;"><strong>Duraci\u00f3n:</strong> ${formData.dias} d\u00edas &middot; ${formData.numViajeros} viajero${formData.numViajeros > 1 ? 's' : ''}</p>
-      <p style="margin:4px 0;"><strong>Fecha de ida:</strong> ${itinerario.resumen?.fecha_salida || 'Ver en el itinerario'}</p>
-      <p style="margin:4px 0;"><strong>Fecha de vuelta:</strong> ${itinerario.resumen?.fecha_regreso || 'Ver en el itinerario'}</p>
-      <p style="margin:4px 0;"><strong>Presupuesto estimado:</strong> ${itinerario.presupuesto_desglose?.total || ''}</p>
-    </div>
-    <div style="background:${coral};border-radius:12px;padding:20px;text-align:center;margin-bottom:24px;">
-      <p style="color:#fff;font-size:14px;margin:0 0 8px;">Tu itinerario completo est\u00e1 adjunto como PDF en este correo.</p>
-      <p style="color:#fff;font-size:13px;font-style:italic;margin:0;">\u00bfProblemas? Esc\u00edbenos a <a href="mailto:vive.vivante.ch@gmail.com" style="color:#FFE0D0;">vive.vivante.ch@gmail.com</a></p>
-    </div>
-    ${(itinerario.dias || []).slice(0, 3).map(dia => `
-    <div style="border-left:4px solid ${coral};padding:12px 16px;margin-bottom:16px;background:${bg0};border-radius:0 8px 8px 0;">
-      <p style="font-weight:700;color:${coral};margin:0 0 6px;">D\u00eda ${dia.numero}: ${dia.titulo}</p>
-      <p style="margin:0 0 4px;color:#212529;font-size:14px;">\ud83c\udf05 ${dia.manana?.actividad || ''}</p>
-      <p style="margin:0 0 4px;color:#212529;font-size:14px;">\ud83c\udf1e ${dia.tarde?.almuerzo || ''}</p>
-      <p style="margin:0;color:${violeta};font-size:12px;font-style:italic;">\ud83d\udcb0 ${dia.gasto_dia || ''}</p>
-    </div>`).join('')}
-    ${(itinerario.dias || []).length > 3 ? `<p style="text-align:center;color:#888;font-size:13px;">... y ${itinerario.dias.length - 3} d\u00edas m\u00e1s en tu itinerario completo (ver PDF adjunto)</p>` : ''}
-  </div>
-  <div style="background:${coral};padding:32px;text-align:center;">
-    <p style="color:#fff;font-size:22px;font-weight:800;margin:0 0 8px;">VIVANTE</p>
-    <p style="color:rgba(255,255,255,0.9);font-size:14px;margin:0 0 16px;">
-      ${itinerario.subtitulo || `\u00a1Solo falta hacer la maleta, ${formData.nombre}!`}
-    </p>
-    <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;">
-      <a href="https://vivevivante.com" style="color:rgba(255,255,255,0.85);">vivevivante.com</a> &middot;
-      <a href="https://instagram.com/vive.vivante" style="color:rgba(255,255,255,0.85);">@vive.vivante</a>
-    </p>
-  </div>
-</div>
-</body></html>`;
-}
-
-
-// --- URL builder helpers ------------------------------------------------------
-function buildAirlineUrl(aerolinea) {
-  const a = (aerolinea || '').toLowerCase();
-  if (a.includes('latam')) return 'https://www.latam.com/';
-  if (a.includes('jetsmart')) return 'https://www.jetsmart.com/';
-  if (a.includes('sky') && !a.includes('scanner')) return 'https://www.skyairline.com/';
-  if (a.includes('avianca')) return 'https://www.avianca.com/';
-  if (a.includes('copa')) return 'https://www.copaair.com/';
-  if (a.includes('aerolineas') || a.includes('aerol\u00edneas') || a.includes('argentinas')) return 'https://www.aerolineas.com.ar/';
-  if (a.includes('aeromexico') || a.includes('aerom\u00e9xico')) return 'https://www.aeromexico.com/';
-  if (a.includes('iberia express') || (a.includes('iberia') && a.includes('express'))) return 'https://www.iberiaexpress.com/';
-  if (a.includes('iberia')) return 'https://www.iberia.com/';
-  if (a.includes('air europa') || a.includes('aireuropa')) return 'https://www.aireuropa.com/';
-  if (a.includes('turkish') || a.includes('thy')) return 'https://www.turkishairlines.com/';
-  if (a.includes('air france') || a.includes('airfrance')) return 'https://www.airfrance.com/';
-  if (a.includes('klm')) return 'https://www.klm.com/';
-  if (a.includes('lufthansa')) return 'https://www.lufthansa.com/';
-  if (a.includes('british')) return 'https://www.britishairways.com/';
-  if (a.includes('tap') || a.includes('portugal')) return 'https://www.flytap.com/';
-  if (a.includes('american')) return 'https://www.aa.com/';
-  if (a.includes('united')) return 'https://www.united.com/';
-  if (a.includes('delta')) return 'https://www.delta.com/';
-  if (a.includes('qatar')) return 'https://www.qatarairways.com/';
-  if (a.includes('emirates')) return 'https://www.emirates.com/';
-  if (a.includes('singapore')) return 'https://www.singaporeair.com/';
-  if (a.includes('japan airlines') || a.includes('jal')) return 'https://www.jal.co.jp/';
-  if (a.includes('gol')) return 'https://www.voegol.com.br/';
-  if (a.includes('azul')) return 'https://www.voeazul.com.br/';
-  return null;
-}
-
-function buildAlojamientoUrl(op, destino, checkin, checkout, adults, alojPref) {
-  const plat = (op.plataforma || '').toLowerCase();
-  const zona  = (op.zona || op.nombre || '').trim();
-  const cat   = (op.categoria || '').toLowerCase();
-  const searchZona = zona ? `${zona}, ${destino}` : (destino || '');
-
-  if (plat.includes('hostel')) {
-    const fmtHW = (d) => { if (!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}%2F${m}%2F${y}`; };
-    // Rating minimo diferenciado por categoria: Economico 75, Confort 80, Premium 85
-    const minRating = cat.includes('premium') ? 85 : cat.includes('confort') ? 80 : 75;
-    return `https://www.hostelworld.com/search?search_keywords=${encodeURIComponent(searchZona)}&dateFrom=${fmtHW(checkin)}&dateTo=${fmtHW(checkout)}&numberOfGuests=${adults||2}&min_rating=${minRating}`;
+// ── LLM abstraction: Anthropic (local) / Groq (prod) ────────────────────────
+async function callLLM(messages, { maxTokens = 8000, temperature = 0.7 } = {}) {
+  const useAnthropic = !!process.env.ANTHROPIC_API_KEY;
+  if (useAnthropic) {
+    const systemMsg = messages.find(m => m.role === 'system')?.content || '';
+    const userMsgs = messages.filter(m => m.role !== 'system');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        ...(systemMsg && { system: systemMsg }),
+        messages: userMsgs,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Anthropic error ${res.status}: ${err}`);
+    }
+    const data = await res.json();
+    return data.content?.[0]?.text || '';
   }
-  if (plat.includes('airbnb')) {
-    // Tipo de habitacion por categoria: Economico = habitacion privada, Confort/Premium = apartamento entero
-    const roomType = cat.includes('econ') ? 'Private room' : 'Entire home/apt';
-    const p = new URLSearchParams({ checkin: checkin||'', checkout: checkout||'', adults: adults||2, query: zona || destino });
-    p.append('room_types[]', roomType);
-    return `https://www.airbnb.com/s/${encodeURIComponent(destino||'')}/homes?${p}`;
+  // Groq (produccion)
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${groqApiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+    }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Groq error ${res.status}: ${errText}`);
   }
-  // Booking.com — filtro de estrellas por categoria
-  const stars = cat.includes('premium') ? 'class=4;class=5'
-              : cat.includes('confort')  ? 'class=3;class=4'
-              :                            'class=2;class=3';
-  const nflt  = alojPref === 'bnb' ? 'pt=11' : `ht_id=204;${stars}`;
-  const p = new URLSearchParams({ ss: searchZona, checkin: checkin||'', checkout: checkout||'', group_adults: adults||2, no_rooms:1, selected_currency:'USD' });
-  return `https://www.booking.com/searchresults.html?${p}&nflt=${encodeURIComponent(nflt)}`;
+  const data = await res.json();
+  return data.choices[0]?.message?.content || '';
 }
+
 
 function pdfBtn(label, url, color) {
   if (!url) return { text: '' };
@@ -170,17 +107,6 @@ async function generateItinerarioPdf(itinerario, formData, planLabel) {
     const isPro   = planLabel.toLowerCase().includes('pro');
     const res     = itinerario.resumen || {};
 
-    const ce = (str) => {
-      if (!str && str !== 0) return '';
-      return String(str)
-        .replace(/\p{Emoji_Presentation}/gu, '')
-        .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
-        .replace(/[\u{2600}-\u{27BF}]/gu, '')
-        .replace(/[\uFE00-\uFE0F]/g, '')
-        .replace(/\u200D/g, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-    };
 
     const secHdr = (txt, col = CORAL) => ({
       table: { widths: ['*'], body: [[{ text: txt, bold: true, fontSize: 12, color: '#fff', margin: [10, 7, 10, 7], border: [false,false,false,false] }]] },
@@ -1309,7 +1235,7 @@ export async function POST(request) {
 
     const isPro = planId === 'pro';
     const groqApiKey = process.env.GROQ_API_KEY;
-    if (!groqApiKey) {
+    if (!groqApiKey && !process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: 'Configuraci�n incompleta' }, { status: 500 });
     }
 
@@ -2272,23 +2198,14 @@ IMPORTANTE sobre dias_pro: para CADA d�a del viaje (${formData.dias} d�as), 
       console.log('Basic?Pro merge fall�, generando Pro completo...');
     }
 
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: isPro ? promptPro : promptBasico }],
-        temperature: 0.7,
-        max_tokens: isPro ? 12000 : 8000,
-      }),
-    });
-
-    if (!groqRes.ok) {
-      const groqErrText = await groqRes.text();
-      console.error('Groq error status:', groqRes.status, 'body:', groqErrText);
+    let rawContent = '';
+    try {
+      rawContent = await callLLM(
+        [{ role: 'user', content: isPro ? promptPro : promptBasico }],
+        { maxTokens: isPro ? 12000 : 8000 }
+      );
+    } catch (llmErr) {
+      console.error('LLM error:', llmErr.message);
       // Si es rate limit (429), intentar con modelo m�s r�pido como fallback
       if (groqRes.status === 429) {
         console.log('Rate limit 429 en modelo principal, intentando fallback con llama-3.1-8b-instant...');
@@ -2336,9 +2253,6 @@ IMPORTANTE sobre dias_pro: para CADA d�a del viaje (${formData.dias} d�as), 
       }
       return NextResponse.json({ error: 'Error generando itinerario' }, { status: 500 });
     }
-
-    const groqData = await groqRes.json();
-    const rawContent = groqData.choices[0]?.message?.content || '';
 
     let itinerario;
     try {

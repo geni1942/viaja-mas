@@ -57,6 +57,11 @@ export async function POST(request) {
       ? `\n- Preferencia de gasto: ${prioridadSuggestMap[data.prioridadGasto]}`
       : '';
 
+    // ── Aerolínea preferida ─────────────────────────────────────────────────
+    const aerolineaCtx = data.aerolineaPreferida
+      ? `\n- Aerolínea preferida: ${data.aerolineaPreferida} — prioriza destinos bien conectados por esta aerolínea o sus alianzas. Menciona en "porque" si hay vuelo directo o buena conexión.`
+      : '';
+
     // ── Restricción dietaria ──────────────────────────────────────────────────
     const restriccionSuggestMap = {
       'vegetariano': 'VEGETARIANO — prioriza destinos con amplia oferta vegetariana real (no solo ensaladas). Ciudades universitarias y cosmopolitas son ideales. EVITA destinos donde la cocina local sea principalmente carne (ej: Buenos Aires asado-céntrico es factible en ciudad; zonas rurales de Argentina, no).',
@@ -82,6 +87,11 @@ export async function POST(request) {
       : data.tipoViaje === 'familia'
         ? `\n- Viaje familiar: prioriza destinos seguros con atracciones para todas las edades.`
         : '';
+
+    // ── Movilidad reducida ──────────────────────────────────────────────────
+    const movilidadCtx = data.movilidadReducida
+      ? '\n- MOVILIDAD REDUCIDA: Alguien del grupo tiene movilidad reducida. Prioriza destinos con buena infraestructura accesible (rampas, transporte adaptado, aceras amplias). EVITA destinos con terreno irregular, muchas escaleras o transporte deficiente. PENALIZA ciudades con cuestas empinadas (Lisboa, San Francisco, Santorini) o sitios arqueológicos sin acceso adaptado.'
+      : '';
 
     const tipoViajeMap = {
       'solo': 'viajero solo', 'pareja': 'pareja', 'familia': 'familia', 'amigos': 'grupo de amigos',
@@ -136,7 +146,7 @@ PERFIL DEL VIAJERO:
 - Tipo de viajero: ${tipoViajero} (${data.numViajeros} personas)
 - Intereses EN PRIORIDAD: ${interesesTexto}
 - Ritmo preferido: ${ritmoTexto}
-- Alojamiento preferido: ${alojTexto}${familiaCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${restriccionCtxSuggest}${experienciaCtxSuggest}${presupuestoReglaSuggest}${distanciaReglaSuggest}
+- Alojamiento preferido: ${alojTexto}${familiaCtx}${movilidadCtx}${ocasionCtxSuggest}${mesCtx}${prioridadCtxSuggest}${aerolineaCtx}${restriccionCtxSuggest}${experienciaCtxSuggest}${presupuestoReglaSuggest}${distanciaReglaSuggest}
 
 REGLAS:
 - Variedad: las 3 opciones deben ser destinos diferentes entre sí (diferentes regiones o países)
@@ -192,38 +202,60 @@ Responde ÚNICAMENTE en este formato JSON exacto, sin texto adicional:
   ]
 }`;
 
-    // Llamar a Groq
-    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un experto en viajes que genera recomendaciones de destinos. Siempre respondes en formato JSON válido, sin texto adicional ni markdown.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.8, // Un poco de variación para sugerencias diferentes
-        max_tokens: 1500,
-      }),
-    });
+    // Llamar a LLM (Anthropic en local, Groq en producción)
+    const useAnthropic = !!process.env.ANTHROPIC_API_KEY;
+    let responseText = '';
 
-    if (!groqResponse.ok) {
-      const errorData = await groqResponse.json();
-      console.error('Error de Groq:', errorData);
-      throw new Error('Error al generar sugerencias');
+    if (useAnthropic) {
+      const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          system: 'Eres un experto en viajes que genera recomendaciones de destinos. Siempre respondes en formato JSON válido, sin texto adicional ni markdown.',
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+      if (!anthropicRes.ok) {
+        const errData = await anthropicRes.json().catch(() => ({}));
+        console.error('Error de Anthropic:', errData);
+        throw new Error('Error al generar sugerencias');
+      }
+      const anthropicData = await anthropicRes.json();
+      responseText = anthropicData.content?.[0]?.text || '';
+    } else {
+      const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: 'Eres un experto en viajes que genera recomendaciones de destinos. Siempre respondes en formato JSON válido, sin texto adicional ni markdown.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 1500,
+        }),
+      });
+      if (!groqResponse.ok) {
+        const errorData = await groqResponse.json();
+        console.error('Error de Groq:', errorData);
+        throw new Error('Error al generar sugerencias');
+      }
+      const groqData = await groqResponse.json();
+      responseText = groqData.choices[0]?.message?.content || '';
     }
-
-    const groqData = await groqResponse.json();
-    const responseText = groqData.choices[0]?.message?.content || '';
     
     // Parsear JSON de la respuesta
     let opciones;

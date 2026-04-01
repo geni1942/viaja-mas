@@ -1,50 +1,9 @@
 import { NextResponse } from 'next/server';
+import { buildConfirmationEmail } from '@/lib/email-templates';
+import { ce } from '@/lib/text-utils';
 
 export const maxDuration = 30;
 export const dynamic = 'force-dynamic';
-
-// ── Email HTML helper ─────────────────────────────────────────────────────────
-function buildConfirmationEmail(formData, itinerario, planLabel, fechaTexto) {
-  const coral = '#FF6332';
-  const violeta = '#6F42C1';
-  const crema = '#FCF8F4';
-  const bg1 = '#FFF0EB';
-  const bg0 = '#FFF8F5';
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tu itinerario VIVANTE</title></head>
-<body style="margin:0;padding:0;background:${crema};font-family:Arial,sans-serif;color:#212529;">
-<div style="max-width:640px;margin:0 auto;background:${crema};">
-  <div style="background:${coral};padding:28px;text-align:center;">
-    <p style="color:#fff;font-size:28px;font-weight:800;margin:0 0 4px;letter-spacing:-1px;">VIVANTE</p>
-    <p style="color:rgba(255,255,255,0.85);font-size:12px;margin:0;letter-spacing:2px;">VIAJA MÁS. PLANIFICA MENOS.</p>
-  </div>
-  <div style="padding:32px;">
-    <h1 style="font-size:22px;color:#212529;margin:0 0 8px;">¡Hola, ${formData.nombre}! ✈️</h1>
-    <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 6px;">Te reenviamos tu plan <strong style="color:${coral};">${planLabel}</strong>.</p>
-    ${fechaTexto ? `<p style="color:${violeta};font-style:italic;font-size:14px;margin:0 0 20px;">📅 ${fechaTexto}</p>` : ''}
-    <div style="background:${bg1};border-radius:12px;padding:20px;margin-bottom:24px;">
-      <h2 style="color:${coral};font-size:17px;margin:0 0 12px;">📊 Resumen</h2>
-      <p style="margin:4px 0;"><strong>Destino:</strong> ${itinerario.resumen?.destino || formData.destino}</p>
-      <p style="margin:4px 0;"><strong>Duración:</strong> ${formData.dias} días · ${formData.numViajeros} viajero${formData.numViajeros > 1 ? 's' : ''}</p>
-      <p style="margin:4px 0;"><strong>Presupuesto:</strong> ${itinerario.presupuesto_desglose?.total || 'Ver PDF adjunto'}</p>
-    </div>
-    <div style="background:${coral};border-radius:12px;padding:18px;text-align:center;margin-bottom:24px;">
-      <p style="color:#fff;font-size:14px;margin:0 0 6px;">📎 Tu itinerario completo está adjunto como PDF.</p>
-      <p style="color:#fff;font-size:12px;margin:0;">¿Problemas? <a href="mailto:vive.vivante.ch@gmail.com" style="color:#FFE0D0;">vive.vivante.ch@gmail.com</a></p>
-    </div>
-  </div>
-  <div style="background:${coral};padding:28px;text-align:center;">
-    <p style="color:#fff;font-size:20px;font-weight:800;margin:0 0 6px;">VIVANTE</p>
-    <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0 0 12px;">${itinerario.subtitulo || `¡Solo falta hacer la maleta, ${formData.nombre}!`}</p>
-    <p style="color:rgba(255,255,255,0.7);font-size:11px;margin:0;">
-      <a href="https://vivevivante.com" style="color:rgba(255,255,255,0.85);">vivevivante.com</a> ·
-      <a href="https://instagram.com/vive.vivante" style="color:rgba(255,255,255,0.85);">@vive.vivante</a>
-    </p>
-  </div>
-</div>
-</body></html>`;
-}
 
 // ── PDF Generator (brand-compliant pdfmake) ───────────────────────────────────
 async function generateItinerarioPdf(itinerario, formData, planLabel) {
@@ -437,7 +396,7 @@ export async function POST(req) {
     const planLabel = isPro ? 'Vivante Pro ⭐' : 'Vivante Básico';
     const fechaTexto = itinerario.resumen?.fecha_optima_texto || '';
 
-    const emailHtml  = buildConfirmationEmail(formData, itinerario, planLabel, fechaTexto);
+    const emailHtml  = buildConfirmationEmail(formData, itinerario, planLabel, fechaTexto, { isResend: true });
     const pdfBase64  = await generateItinerarioPdf(itinerario, formData, planLabel);
     if (!pdfBase64) console.warn('[VIVANTE resend] PDF no generado — email sin adjunto.');
 

@@ -1,55 +1,9 @@
 import { NextResponse } from 'next/server';
+import { buildAirlineUrl, buildAlojamientoUrl } from '@/lib/url-builders';
+import { ce } from '@/lib/text-utils';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
-
-// ── URL builder helpers ───────────────────────────────────────────────────────
-function buildAirlineUrl(aerolinea) {
-  const a = (aerolinea || '').toLowerCase();
-  if (a.includes('latam')) return 'https://www.latam.com/';
-  if (a.includes('jetsmart')) return 'https://www.jetsmart.com/';
-  if (a.includes('sky') && !a.includes('scanner')) return 'https://www.skyairline.com/';
-  if (a.includes('avianca')) return 'https://www.avianca.com/';
-  if (a.includes('copa')) return 'https://www.copaair.com/';
-  if (a.includes('aerolineas') || a.includes('aerol\u00edneas') || a.includes('argentinas')) return 'https://www.aerolineas.com.ar/';
-  if (a.includes('aeromexico') || a.includes('aerom\u00e9xico')) return 'https://www.aeromexico.com/';
-  if (a.includes('iberia express') || (a.includes('iberia') && a.includes('express'))) return 'https://www.iberiaexpress.com/';
-  if (a.includes('iberia')) return 'https://www.iberia.com/';
-  if (a.includes('air europa') || a.includes('aireuropa')) return 'https://www.aireuropa.com/';
-  if (a.includes('turkish') || a.includes('thy')) return 'https://www.turkishairlines.com/';
-  if (a.includes('air france') || a.includes('airfrance')) return 'https://www.airfrance.com/';
-  if (a.includes('klm')) return 'https://www.klm.com/';
-  if (a.includes('lufthansa')) return 'https://www.lufthansa.com/';
-  if (a.includes('british')) return 'https://www.britishairways.com/';
-  if (a.includes('tap') || a.includes('portugal')) return 'https://www.flytap.com/';
-  if (a.includes('american')) return 'https://www.aa.com/';
-  if (a.includes('united')) return 'https://www.united.com/';
-  if (a.includes('delta')) return 'https://www.delta.com/';
-  if (a.includes('qatar')) return 'https://www.qatarairways.com/';
-  if (a.includes('emirates')) return 'https://www.emirates.com/';
-  if (a.includes('singapore')) return 'https://www.singaporeair.com/';
-  if (a.includes('japan airlines') || a.includes('jal')) return 'https://www.jal.co.jp/';
-  if (a.includes('gol')) return 'https://www.voegol.com.br/';
-  if (a.includes('azul')) return 'https://www.voeazul.com.br/';
-  return null;
-}
-
-function buildAlojamientoUrl(op, destino, checkin, checkout, adults, alojPref) {
-  const plat = (op.plataforma || '').toLowerCase();
-  const nombre = (op.nombre || '').trim();
-  if (plat.includes('hostel')) {
-    const fmtHW = (d) => { if (!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}%2F${m}%2F${y}`; };
-    return `https://www.hostelworld.com/search?search_keywords=${encodeURIComponent(nombre+', '+(destino||''))}&dateFrom=${fmtHW(checkin)}&dateTo=${fmtHW(checkout)}&numberOfGuests=${adults||2}`;
-  }
-  if (plat.includes('airbnb')) {
-    const p = new URLSearchParams({ checkin: checkin||'', checkout: checkout||'', adults: adults||2, query: nombre });
-    return `https://www.airbnb.com/s/${encodeURIComponent(destino||'')}/homes?${p}`;
-  }
-  const searchTerm = nombre ? `${nombre}, ${destino}` : destino;
-  const p = new URLSearchParams({ ss: searchTerm, checkin: checkin||'', checkout: checkout||'', group_adults: adults||2, no_rooms:1, selected_currency:'USD' });
-  if (alojPref === 'bnb') p.append('nflt', 'pt%3D11');
-  return `https://www.booking.com/searchresults.html?${p}`;
-}
 
 // pdfmake clickable button cell — visible size
 function pdfBtn(label, url, color) {
@@ -103,18 +57,6 @@ async function generateItinerarioPdf(itinerario, formData, planLabel) {
     const BG1     = '#FFF0EB';
     const isPro   = planLabel.toLowerCase().includes('pro');
     const res     = itinerario.resumen || {};
-
-    const ce = (str) => {
-      if (!str && str !== 0) return '';
-      return String(str)
-        .replace(/\p{Emoji_Presentation}/gu, '')
-        .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
-        .replace(/[\u{2600}-\u{27BF}]/gu, '')
-        .replace(/[\uFE00-\uFE0F]/g, '')
-        .replace(/\u200D/g, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-    };
 
     const secHdr = (txt, col = CORAL) => ({
       table: { widths: ['*'], body: [[{ text: txt, bold: true, fontSize: 12, color: '#fff', margin: [10, 7, 10, 7], border: [false,false,false,false] }]] },
